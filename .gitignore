@@ -1,0 +1,6 @@
+out/
+/.vs
+3-party/osip2/platform/vsnet/osipparser2/x64
+3-party/osip2/platform/vsnet/.vs
+3-party/osip2/platform/vsnet/osip2/
+3-party/osip2/platform/vsnet/x64/

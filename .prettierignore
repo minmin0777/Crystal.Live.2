@@ -1,0 +1,26 @@
+# Ignore artifacts:
+build
+coverage
+
+# Ignore all HTML files:
+*.html
+
+
+# Ignore all Cmake files:
+*.cmake
+
+# Ignore all txt files:
+*.txt
+
+# Ignore all in files:
+*.in
+
+*.rc
+
+*.rc2
+
+*.qrc
+
+*.rc.in
+
+*.ts
