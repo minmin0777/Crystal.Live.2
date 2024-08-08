@@ -7,7 +7,7 @@ coverage
 
 
 # Ignore all Cmake files:
-*.cmake
+# *.cmake
 
 # Ignore all txt files:
 *.txt

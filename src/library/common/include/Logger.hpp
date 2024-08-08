@@ -72,6 +72,7 @@
 #include <boost/locale.hpp>
 #include <boost/stacktrace.hpp>
 #include <ex_semaphore.hpp>
+#include <Environment.h>
 namespace logging = boost::log;
 namespace keywords = boost::log::keywords;
 namespace sinks = boost::log::sinks;
@@ -82,7 +83,7 @@ namespace src = boost::log::sources;
 using namespace std::literals::chrono_literals;
 //typedef src::severity_logger_mt<severity_level> service_logger_mt;
 
-#define OUTPUT_LINE "-----------------------------------------------------------------------\n"
+// #define OUTPUT_LINE "-----------------------------------------------------------------------\n"
 /**
  * @brief 日志级别定义
  * * TRACE: 跟踪信息

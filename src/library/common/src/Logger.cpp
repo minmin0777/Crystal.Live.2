@@ -22,6 +22,7 @@
 
 #include "Environment.h"
 #include "../include/Logger.hpp"
+#include <string>
 
  // Convert file path to only the filename
 std::string path_to_filename(std::string path) {

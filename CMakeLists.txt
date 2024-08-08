@@ -1,10 +1,9 @@
 
 # 防止在源代码目录中进行构建。可以避免在源代码目录中生成的构建文件污染源代码。
 if(" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
-  message(FATAL_ERROR "
-FATAL: In-source builds are not allowed.
-       You should create a separate directory for build files.
-")
+  message(FATAL_ERROR "FATAL: In-source builds are not allowed.
+         You should create a separate directory for build files.
+    ")
 endif()
 
 
@@ -15,7 +14,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_UNICODE -DUNICODE -Dutf-8")
 
 if(MSVC)
   add_compile_options(/EHsc /UTF-8)
+  
 endif()
+
 
 
 #设置CMake的输出信息为详细
@@ -69,19 +70,27 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ${ENABLE_PIC})
 
 #设定当前的项目为 Cryctal.Live.2
 project(Crystal.live2 VERSION 1.0)
+#查找boost库
+include(./cmake/env/FindBoost.cmake)
+#查找QT库
+include(./cmake/env/FindQT6.cmake)
+#查找FFmpeg库
+include(./cmake/env/FindFFMPEG.cmake)
+
+include(./cmake/CreatePDB.cmake)
+
 
 #添加自定义的CMake选项，用于控制是否编译第三方库，开启时会同时编译第三方库，关闭时只编译项目本身
-option(ENABLE_COMPILE_THIRD_PARTY_LIBRARY "Enable compile third-party Library" ON)
+option(ENABLE_COMPILE_THIRD_PARTY_LIBRARY "Enable compile third-party Library" OFF)
+
+
 
 if(ENABLE_COMPILE_THIRD_PARTY_LIBRARY)
   message(STATUS "开始编译第三方库")
   add_subdirectory(${CMAKE_SOURCE_DIR}/3rd-party)
-else()
-
-  add_subdirectory(./src)
 endif()
 
-
+add_subdirectory(./src)
 
 
 # CPack 配置

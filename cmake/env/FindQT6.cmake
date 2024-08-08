@@ -17,6 +17,10 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
+if (MSVC)
+#Qt6QmlTools_DIR 在windows MSVC环境下需手工指定
+    set(Qt6QmlTools_DIR ${QT6_InstallDir}/lib/cmake/Qt6QmlTools)
+endif()
 
 #查找QT6的库
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Svg Network qml LinguistTools)

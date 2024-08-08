@@ -1,0 +1,72 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "d:/Project_src/Crystal.Live.2/**",
+                "D:/Qt/6.7.0/msvc2019_64/include/QtWidgets",
+                "D:/Qt/6.7.0/msvc2019_64/include/**",
+                "D:/Library/**",
+                "D:/Library/boost_1_84_0/output/include/boost-1_85/**",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "cStandard": "c17",
+            "intelliSenseMode": "windows-msvc-x64",
+            "cppStandard": "c++20",
+            "mergeConfigurations": false,
+            "compilerPath": "cl.exe",
+            "browse": {
+                "path": [
+                    "d:/Project_src/Crystal.Live.2/**",
+                    "D:/Qt/6.7.0/msvc2019_64/include/QtWidgets",
+                    "D:/Qt/6.7.0/msvc2019_64/include/**",
+                    "D:/Library/**",
+                    "D:/Library/boost_1_84_0/output/include/boost-1_84/**",
+                    "d:/Project_src/Crystal.Live.2"
+                ]
+            },
+            "compilerPathInCppPropertiesJson": "cl.exe"
+        },
+        {
+            "name": "Win64",
+            "includePath": [
+                "d:/Project_src/Crystal.Live.2/**",
+                "D:/Project_src/Crystal.Live.2/**",
+                "D:/Qt/6.7.0/msvc2019_64/include/QtWidgets",
+                "D:/Qt/6.7.0/msvc2019_64/include/**",
+                "D:/Library/**",
+                "D:/Library/boost_1_84_0/output/include/boost-1_85/**",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "mergeConfigurations": false,
+            "compilerPath": "cl.exe",
+            "browse": {
+                "path": [
+                    "d:/Project_src/Crystal.Live.2/**",
+                    "D:/Project_src/Crystal.Live.2/**",
+                    "D:/Qt/6.7.0/msvc2019_64/include/QtWidgets",
+                    "D:/Qt/6.7.0/msvc2019_64/include/**",
+                    "D:/Library/**",
+                    "D:/Library/boost_1_84_0/output/include/boost-1_84/**",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um/**",
+                    "${workspaceFolder}"
+                ]
+            }
+        }
+    ],
+    "version": 4
+}

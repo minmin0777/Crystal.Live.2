@@ -9,7 +9,7 @@ set (CMAKE_PREFIX_PATH $ENV{Boost_DIR})
 message(STATUS "Boost_DIR: $ENV{Boost_DIR}")
 #查找Boost库
 #找到需要的boost组件 container容器库 filesystem文件系统库 system系统库 thread线程库 log日志库 log_setup日志设置库 exception异常库 date_time日期时间库 chrono时间库 regex正则库 random随机库 serialization序列化库
-find_package(Boost  REQUIRED COMPONENTS filesystem system thread log log_setup exception date_time chrono regex random serialization container)
+find_package(Boost  REQUIRED COMPONENTS filesystem system thread log_setup log exception date_time chrono regex random serialization container)
 
 message(STATUS "Boost 版本号: ${Boost_VERSION}")
 if (Boost_FOUND)

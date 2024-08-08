@@ -1,0 +1,27 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Crystal.Live 2 信创录音系统",
+  "steps": [
+    {
+      "title": "起始结构",
+      "description": "项目的作用\r\n1.进行voip的录音系统开发\r\n2.支持国产信创系统\r\n"
+    },
+    {
+      "file": "src/LaunchApp/CMakelists.txt",
+      "description": "代码总体组织结构- CMakelists.txt",
+      "line": 1,
+      "title": "代码总体组织结构- CMakelists.txt"
+    },
+    {
+      "file": "CMakelists.txt",
+      "description": "Cmake 引导文件",
+      "line": 1
+    },
+    {
+      "file": "Release Notes.md",
+      "description": "--\r\n版本日志",
+      "line": 1,
+      "title": "-版本日志说明"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 #设置版本信息
 set(version 3.4.1)
 
+
 #设定当前的项目为 Cryctal.Live.2
 project(Common VERSION ${version} LANGUAGES CXX)
 
