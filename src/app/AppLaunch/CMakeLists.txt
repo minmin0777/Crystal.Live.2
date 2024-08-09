@@ -51,7 +51,7 @@ set(_LegalCopyright "")
 configure_file( ${CMAKE_SOURCE_DIR}/src/app/${PROJECT_NAME}/res/${PROJECT_NAME}.rc.in ${CMAKE_SOURCE_DIR}/src/app/${PROJECT_NAME}/res/${PROJECT_NAME}.rc @ONLY)
 message(STATUS "配置资源文件: res/AppLaunch.rc")
 
-include(${CMAKE_SOURCE_DIR}/cmake/env/FindQT6.cmake)
+# include(${CMAKE_SOURCE_DIR}/cmake/env/FindQT6.cmake)
 #set(DOWNLOAD_EXTRACT_TIMESTAMP true)
 
 cmake_policy(SET CMP0135 NEW)
@@ -90,6 +90,7 @@ find_program(QT_LRELEASE NAMES lrelease)
 
 add_dependencies(${PROJECT_NAME} Script-UpdateTranslations_${PROJECT_NAME})
 add_dependencies(${PROJECT_NAME} Common)
+add_dependencies(${PROJECT_NAME} Config)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
@@ -197,14 +198,14 @@ message(STATUS "添加预编译头文件 -D${PROJECT_NAME}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Common)
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindAudio.cmake")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Audio)
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::Audio)
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCodec.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Codec)
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::Codec)
 
 
 
@@ -214,7 +215,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE PCAP)
 
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindNetCapture.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE NetCapture)
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::NetCapture)
+
+
+include("${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake")
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
 
 
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindFFMPEG.cmake")

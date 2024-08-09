@@ -9,10 +9,10 @@
 #  ifndef Config_EXPORT
 #    ifdef Config_EXPORTS
         /* We are building this library */
-#      define Config_EXPORT __declspec(dllexport)
+#      define Config_EXPORT 
 #    else
         /* We are using this library */
-#      define Config_EXPORT __declspec(dllimport)
+#      define Config_EXPORT 
 #    endif
 #  endif
 

@@ -20,5 +20,14 @@
  ————————————————————————————————————————————————————————————————————————————————————————*/
 #pragma once
 #include <string>
+#include <sstream>
+
+#include <Common.h>
+#include <Utility.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/json.hpp>
+#include <boost/locale.hpp>
+
+ //替换字符串，使用boost.algorithm库
+#include <boost/algorithm/string/replace.hpp>

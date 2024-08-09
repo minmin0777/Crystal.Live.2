@@ -174,7 +174,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
 
 
 
-                LOG(INFO) << Utility::GetWorkerDirectory();
+                LOG(INFO) << Common::Utility::GetWorkerDirectory();
 
                 // std::string strSrcMacAddress = Utility::GetMACAddress(pEthernet->SourceHostMac);
                 // std::string strDstMacAddress = Utility::GetMACAddress(pEthernet->DestHostMac);

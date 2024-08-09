@@ -28,7 +28,10 @@
 #include <iostream>
 
 
-namespace Utility {
+namespace Common
+{
+
+
 
     /** --------------------------------------------------------------------------------------------------------------------------
         * @name  std::string GetWorkerDirectory(bool bEndWithSlash = true) noexcept
@@ -36,7 +39,7 @@ namespace Utility {
         * @param bEndWithSlash 是否以斜杠结尾
         * @return 工作目录
         --------------------------------------------------------------------------------------------------------------------------*/
-    std::string GetWorkerDirectory(bool bEndWithSlash) noexcept
+    std::string Utility::GetWorkerDirectory(bool bEndWithSlash) noexcept
     {
 
         boost::filesystem::path exePath = boost::filesystem::initial_path();
@@ -61,7 +64,7 @@ namespace Utility {
      * @return MAC地址
      --------------------------------------------------------------------------------------------------------------------------*/
 
-    std::string ConvMACAddress(const char MAC[6]) noexcept
+    std::string Utility::ConvMACAddress(const char MAC[6]) noexcept
     {
         if (MAC == nullptr)
         {
@@ -82,7 +85,7 @@ namespace Utility {
      *  @param separator 分隔符
      *  @return 分割后的字符串数组
      --------------------------------------------------------------------------------------------------------------------------*/
-    std::vector<std::string> SplitString(const std::string& input, const std::string& separator) noexcept
+    std::vector<std::string> Utility::SplitString(const std::string& input, const std::string& separator) noexcept
     {
 
         std::vector<std::string> result;
@@ -107,7 +110,7 @@ namespace Utility {
      * @return 分割后的字符串数组数量
      ----------------------------------------------------------------------------------------------------------------------------*/
 
-    size_t SplitString(const std::string& input, const std::string& separator, std::vector<std::string>& vtRet) noexcept
+    size_t Utility::SplitString(const std::string& input, const std::string& separator, std::vector<std::string>& vtRet) noexcept
     {
         vtRet.clear();
         vtRet.shrink_to_fit();
@@ -125,7 +128,6 @@ namespace Utility {
     }
     /*------------------------------------------------------------------------------------------------------------------------------*/
 
+
+
 }
-
-
-

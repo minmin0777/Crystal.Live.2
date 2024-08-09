@@ -236,13 +236,10 @@ public:
 
   //static std::string path_to_filename(std::string path);
 
-
-
-
 //文件后端格式器
   static boost::shared_ptr<sinks::text_file_backend> m_pFileBackend;
   //文件后端格式器-收集全部库的日志
-  static boost::shared_ptr<sinks::text_file_backend> m_pFileBackendAll;
+  // static boost::shared_ptr<sinks::text_file_backend> m_pFileBackendAll;
 
   static inline std::shared_mutex m_log_mtx;
   //信号量

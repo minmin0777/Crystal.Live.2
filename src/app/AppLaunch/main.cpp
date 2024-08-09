@@ -74,7 +74,7 @@
 #include <thread>
 #include <chrono>
 #include <boost/locale.hpp>
-
+#include <Config.h>
 
 
 //使用chrono字面量
@@ -117,13 +117,12 @@ void signalHandler(int signum) {
 }
 
 int main(int argc, char* argv[]) {
-
+  using namespace boost::locale;
   std::set_terminate(&my_terminate_handler);
   signal(SIGSEGV, handler);   // 设置信号处理函数
   // 设置SIGINT（Ctrl+C）的信号处理函数
   signal(SIGINT, signalHandler);
 
-  using namespace boost::locale;
   Common::SetEnv();
   Common::InitLog("AppLaunch");
   QGuiApplication app(argc, argv);
@@ -136,6 +135,8 @@ int main(int argc, char* argv[]) {
       break;
     }
   }
+  Config::GetVersion();
+  Config::init();
   NetCapture::Init();
   // std::vector<std::shared_ptr<NetworkAdapterInfo>> vtDevices;
   // size_t nDevCount = NetCapture::GetDevicesInfo(vtDevices);

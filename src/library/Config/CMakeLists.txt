@@ -54,6 +54,7 @@ project(${PROJECT_NAME} VERSION ${version} LANGUAGES CXX)
 remove_definitions(/showIncludes)
 
 
+
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB HEADERS "include/*.h")
 
@@ -152,6 +153,7 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 endif()
 
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
 
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 

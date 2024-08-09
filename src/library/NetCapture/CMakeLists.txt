@@ -190,15 +190,25 @@ install(TARGETS ${PROJECT_NAME}
 
 )
 
+file(GLOB SOURCES "src/*.cpp")
+file(GLOB HEADERS "include/*.h")
 
+# file(INSTALL ./include/${PROJECT_NAME}.h DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+# file(INSTALL ./include/${PROJECT_NAME}.Export.h DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+# file(INSTALL ./include/${PROJECT_NAME}.Export.h DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 
-file(INSTALL ./include/${PROJECT_NAME}.h DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
-file(INSTALL ./include/${PROJECT_NAME}.Export.h DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 message(STATUS "${PROJECT_NAME}--头文件目录:${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}")
+# 获取所有头文件
+file(GLOB HEADER_FILES "./include/*.h" "./include/*.hpp")
+# 逐个拷贝文件
+foreach(HEADER_FILE ${HEADER_FILES})
+  file(INSTALL ${HEADER_FILE} DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
+endforeach()
+
 
 install(FILES ./include/${PROJECT_NAME}.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 install(FILES ./include/${PROJECT_NAME}.Export.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
-
+install(DIRECTORY ./include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
 export(EXPORT ${PROJECT_NAME}
        FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-Targets.cmake"
