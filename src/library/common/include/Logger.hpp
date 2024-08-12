@@ -88,11 +88,11 @@ using namespace std::literals::chrono_literals;
  * @brief 日志级别定义
  * * TRACE: 跟踪信息
  * * DEBUG: 调试信息
- * * INFO: 信息
- * * WARN: 警告
- * ! ERROR: 错误
- * ! FATAL: 严重错误
- * todo: 待办事项
+ * * INFO:  信息
+ * * WARN:  警告
+ * * ERROR: 错误
+ * * FATAL: 严重错误
+ * * HEAD:  头信息
  * @note 日志级别从低到高排列
  *
  */
@@ -118,7 +118,15 @@ typedef src::severity_channel_logger_mt<
   std::string         // the type of the channel name
 > service_logger_mt;
 
-
+/**
+ * @brief 全局日志器
+ * @warning: 如果要完整的使用日志器，需要在main函数中调用InitBoostlog函数进行初始化
+ * @warning: 当编译为静态库时，使用全局日志器时，由于共享同一内存地址，所以channel名称会与主程序相同。
+ * @warning: 为避免此情况，应将需要单独记录的module或library编译为动态库
+ * @note 该日志器的名称为Service_logger
+ * @note 该日志器的通道名称为LOG_PROJECT_NAME
+ *
+*/
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(Service_logger, service_logger_mt)
 {
@@ -239,7 +247,7 @@ public:
 //文件后端格式器
   static boost::shared_ptr<sinks::text_file_backend> m_pFileBackend;
   //文件后端格式器-收集全部库的日志
-  // static boost::shared_ptr<sinks::text_file_backend> m_pFileBackendAll;
+  static boost::shared_ptr<sinks::text_file_backend> m_pFileBackendAll;
 
   static inline std::shared_mutex m_log_mtx;
   //信号量

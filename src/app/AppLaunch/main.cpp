@@ -138,6 +138,8 @@ int main(int argc, char* argv[]) {
   Config::GetVersion();
   Config::init();
   NetCapture::Init();
+  Codec::GetVersion();
+  //Codec::Init();
   // std::vector<std::shared_ptr<NetworkAdapterInfo>> vtDevices;
   // size_t nDevCount = NetCapture::GetDevicesInfo(vtDevices);
   // for (size_t i = 0; i < vtDevices.size(); i++)

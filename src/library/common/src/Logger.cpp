@@ -33,9 +33,8 @@ std::string path_to_filename(std::string path) {
 //文件后端格式器
 boost::shared_ptr<sinks::text_file_backend> Logger::m_pFileBackend = nullptr;
 
-// //文件后端格式器-收集全部库的日志
-// boost::shared_ptr<sinks::text_file_backend> Logger::m_pFileBackendAll = nullptr;
-
+//文件后端格式器-收集全部库的日志
+boost::shared_ptr<sinks::text_file_backend> Logger::m_pFileBackendAll = nullptr;
 
 std::shared_ptr<std::ex_counting_semaphore<>> Logger::m_pSemaphore = nullptr;
 
@@ -252,12 +251,12 @@ bool Logger::InitBoostlog(const std::string& channel)
     logging::core::get()->add_global_attribute("Line", attrs::mutable_constant<long>(0));
 
     // 创建一个日志文件名，包含了传入的频道名称和时间戳
-    std::stringstream strLogFileName;//, strLogFileNameAll;
+    std::stringstream strLogFileName, strLogFileNameAll;
     strLogFileName << "Live." << channel << "_%Y%m%d_%3N.log";
-    //strLogFileNameAll << "Live.Timeline" << "_%Y%m%d_%3N.log";
+    strLogFileNameAll << "Live.Timeline" << "_%Y%m%d_%3N.log";
     // 日志文件将被保存在由GetLogDirectory()函数返回的目录中
     std::string strLogPath = GetLogDirectory() + strLogFileName.str();
-    //std::string strLogPathAll = GetLogDirectory() + strLogFileNameAll.str();
+    std::string strLogPathAll = GetLogDirectory() + strLogFileNameAll.str();
     // 创建一个文件后端，这个后端负责将日志消息写入文件
     m_pFileBackend = boost::make_shared<sinks::text_file_backend>(
         keywords::file_name = strLogPath,
@@ -269,46 +268,46 @@ bool Logger::InitBoostlog(const std::string& channel)
         keywords::open_mode = std::ios_base::app // 使用追加模式打开文件
     );
 
-    // // 创建一个文件后端，这个后端负责将日志消息写入文件
-    // m_pFileBackendAll = boost::make_shared<sinks::text_file_backend>(
-    //     keywords::file_name = strLogPathAll,
-    //     keywords::target_file_name = strLogPathAll,
-    //     keywords::auto_flush = true,
-    //     keywords::rotation_size = 10 * 1024 * 1024, // 文件大小限制
-    //     keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0), // 基于时间的文件旋转
-    //     keywords::format = file_formatter(), // 文件格式
-    //     keywords::open_mode = std::ios_base::app // 使用追加模式打开文件
-    // );
+    // 创建一个文件后端，这个后端负责将日志消息写入文件
+    m_pFileBackendAll = boost::make_shared<sinks::text_file_backend>(
+        keywords::file_name = strLogPathAll,
+        keywords::target_file_name = strLogPathAll,
+        keywords::auto_flush = true,
+        keywords::rotation_size = 10 * 1024 * 1024, // 文件大小限制
+        keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0), // 基于时间的文件旋转
+        keywords::format = file_formatter(), // 文件格式
+        keywords::open_mode = std::ios_base::app // 使用追加模式打开文件
+    );
 
     // 创建一个文件前端，这个前端负责接收日志消息并将其传递给后端
     typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
     boost::shared_ptr<file_sink> file_logger(new file_sink(m_pFileBackend));
 
-    // typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink_all;
-    // boost::shared_ptr<file_sink> file_logger_all(new file_sink(m_pFileBackendAll));
+    typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink_all;
+    boost::shared_ptr<file_sink> file_logger_all(new file_sink(m_pFileBackendAll));
 
 
     // 设置一个文件打开处理器，这个处理器在文件被打开时会被调用
     m_pFileBackend->set_open_handler(&custom_open_handler2);
 
     // 设置一个文件打开处理器，这个处理器在文件被打开时会被调用
-    // m_pFileBackendAll->set_open_handler(&custom_open_handler2);
+    m_pFileBackendAll->set_open_handler(&custom_open_handler2);
 
 
     // 设置文件前端的格式器
     file_logger->set_formatter(file_formatter());
 
     // 设置文件前端的格式器
-    // file_logger_all->set_formatter(file_formatter());
+    file_logger_all->set_formatter(file_formatter());
 
 
     // 将文件前端的区域设置为"zh_CN.UTF-8"，这意味着日志消息将使用这个区域的规则进行格式化
     std::locale loc = boost::locale::generator()("zh_CN.UTF-8");
     file_logger->imbue(loc);
-    //  file_logger_all->imbue(loc);
+    file_logger_all->imbue(loc);
     // 将文件前端添加到日志核心，这意味着日志核心将开始接收并处理通过这个前端发送的日志消息
     logging::core::get()->add_sink(file_logger);
-    // logging::core::get()->add_sink(file_logger_all);
+    logging::core::get()->add_sink(file_logger_all);
 
 
     // 创建一个控制台前端

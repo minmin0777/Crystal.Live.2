@@ -21,7 +21,7 @@ set(version 3.4.1)
 
 set (PROJECT_NAME "Config")
 
-option(BUILD_SHARED "build shared library" OFF)
+option(BUILD_SHARED "build shared library" ON)
 #option(BUILD_STATIC "build static library" ON)
 
 
@@ -153,7 +153,9 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 endif()
 
 
+message(STATUS "添加预编译头文件 -D${PROJECT_NAME}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
+
 
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 

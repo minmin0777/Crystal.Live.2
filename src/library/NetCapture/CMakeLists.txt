@@ -77,6 +77,9 @@ file(GLOB HEADERS "include/*.h")
 
 set(CMAKE_CXX_FLAGS "/EHsc ${CMAKE_CXX_FLAGS}")
 
+message(STATUS "添加预编译头文件 -D${PROJECT_NAME}")
+target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
+
 target_sources(${PROJECT_NAME}
   PRIVATE ${SOURCES} ${HEADERS}
  )

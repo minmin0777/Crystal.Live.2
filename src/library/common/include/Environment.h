@@ -117,7 +117,7 @@ typedef unsigned long COLORREF;
 #include <iomanip>
 #include <thread>
 #undef ERROR
-#define OUTPUT_LINE "-----------------------------------------------------------------------"
+#define OUTPUT_LINE "-----------------------------------------------------------------------\n"
 
 namespace logging = boost::log;
 namespace keywords = boost::log::keywords;
