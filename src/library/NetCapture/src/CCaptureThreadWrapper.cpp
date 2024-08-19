@@ -22,7 +22,7 @@
 #include <Common.h>
 #include <regex>
 #include <qtranslator.h>
-
+#include <CNetCapture.h>
 
 
  /** --------------------------------------------------------------------------------------------------------------------------
@@ -114,6 +114,8 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
             {
                 LOG(WARN) << "pcap_next_ex return : " << ret;
                 std::shared_ptr<PCAP_PACKAGE> pPcapPackage = std::make_shared<PCAP_PACKAGE>();
+
+                pPcapPackage->nContentLen = pPacketHeader->caplen;
                 //PCAP_PACKAGE pcapPackage;
                 memcpy(&pPcapPackage->header, pPacketHeader, sizeof(*pPacketHeader));
                 pPcapPackage->pData = new char[pPacketHeader->caplen];
@@ -123,6 +125,9 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                 // 先取出Ethernet Header
                 PETHERNET_HEADER pEthernet = (PETHERNET_HEADER)pCurPointer;
                 pCurPointer += sizeof(ETHERNET_HEADER);
+                //
+
+                pPcapPackage->nContentLen -= sizeof(ETHERNET_HEADER);
 
 
                 if (0x8 != pEthernet->EthernetType
@@ -137,6 +142,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                 {
                     // VLAN, 游标需要后移4 Bytes
                     pCurPointer += 4;
+                    pPcapPackage->nContentLen -= 4;
                 }
 
 
@@ -147,6 +153,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     continue;
                 }
                 pCurPointer += sizeof(IP_HEADER);
+                pPcapPackage->nContentLen -= sizeof(IP_HEADER);
 
                 if (IP_PACKET_TCP == pIPHeader->Protocol)
                 {
@@ -156,6 +163,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     pTcpHeader->SourcePort = ntohs(pTcpHeader->SourcePort);
                     pTcpHeader->DestPort = ntohs(pTcpHeader->DestPort);
                     pCurPointer += sizeof(TCP_HEADER);
+                    pPcapPackage->nContentLen -= sizeof(TCP_HEADER);
                     LOG(INFO) << "TCP Header: " << pTcpHeader->SourcePort << " -> " << pTcpHeader->DestPort;
 
                 }
@@ -168,6 +176,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     pUDPHeader->SourcePort = ntohs(pUDPHeader->SourcePort);
                     pUDPHeader->DestPort = ntohs(pUDPHeader->DestPort);
                     pCurPointer += sizeof(UDP_HEADER);
+                    pPcapPackage->nContentLen -= sizeof(UDP_HEADER);
                     LOG(INFO) << "UDP Header: " << pUDPHeader->SourcePort << " -> " << pUDPHeader->DestPort;
 
                 }
@@ -184,9 +193,22 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                 if (std::regex_search(pCurPointer, sip_regex))
                 {
                     LOG(HEAD) << "SIP message detected \n" << pCurPointer;
+                    std::string strSipMessage = pCurPointer;
+                    LOG(DEBUG) << "Sip message length: " << strSipMessage.length();
+                    pPcapPackage->pContent = new char[pPcapPackage->nContentLen + 1];
+                    pPcapPackage->nPackageType = PCAP_PACKAGE::ENUM_PACKAGE_TYPE::CONTROL;
+                    memset(pPcapPackage->pContent, NULL, pPcapPackage->nContentLen + 1);
+                    memcpy(pPcapPackage->pContent, pCurPointer, pPcapPackage->nContentLen);
                     // 进一步处理SIP消息...拷贝到消息队列
-                    m_queue.Enqueue(std::move(pPcapPackage));
-                    LOG(INFO) << "Queue size: " << m_queue.Size() << " | pcapPackage.data :" << std::hex << pPcapPackage->pData;
+
+                    m_queue.Enqueue(pPcapPackage);
+
+                    std::string strSipMsg = pCurPointer;
+                    //CNetCapture::ParserSipMessage(strSipMsg);
+
+                    LOG(DEBUG) << "Queue size: " << m_queue.Size()
+                        << " | pcapPackage.data :" << Common::Utility::toHex(pPcapPackage->pData, 10);
+
                 }
                 else
                 {
@@ -323,9 +345,11 @@ void CCaptureThreadWrapper::ParseQueueThread()
             std::shared_ptr<PCAP_PACKAGE> pPcapPackage = nullptr;
             if (m_queue.TryDequeue(pPcapPackage) && pPcapPackage != nullptr)
             {
-                LOG(INFO) << "Queue size: " << m_queue.Size()
-                    << " | pPcapPackage->header.caplen :" << pPcapPackage->header.caplen
-                    << " | pPcapPackage->data :" << std::hex << static_cast<int>(pPcapPackage->pData[0]) << std::dec; // 使用 static_cast<int> 以确保以十六进制格式正确输出，并在之后重置格式
+                LOG(DEBUG) << "Queue size: " << m_queue.Size()
+                    << " | pPcapPackage->nContentLen :" << pPcapPackage->nContentLen
+                    << " | pPcapPackage->pContent :" << pPcapPackage->pContent;
+                CNetCapture::parse_sip_message_from_string(pPcapPackage->pContent);
+
             }
             else
             {

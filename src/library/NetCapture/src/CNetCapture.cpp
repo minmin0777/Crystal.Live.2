@@ -1,29 +1,8 @@
-﻿
-/*————————————————————————————————————————————————————————————————————————————————————————
- * @Author: jason minmin0777@126.com
- * @Date: 2024-07-08 09:56:53
- * @LastEditors: jason minmin0777@126.com
- * @LastEditTime: 2024-07-09 11:37:34
- * @FilePath: \Crystal.Live.2\src\library\NetCapture\src\CNetCapture.cpp
- * @Description:
- * @
- * @#|----------------------------------------------------------------------------|
- * @#|  Remark         : Description                                              |
- * @#|----------------------------------------------------------------------------|
- * @#|  Change History :                                                          |
- * @#|  <Date>     | <Version> | <Author>       | <Description>                   |
- * @#|----------------------------------------------------------------------------|
- * @#|  2024/05/02 | 0.0.0.1   | jason.chen     | Create file                     |
- * @#|----------------------------------------------------------------------------|
- * @#|                                                                            |
- * @#|----------------------------------------------------------------------------|
- * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
- ————————————————————————————————————————————————————————————————————————————————————————*/
 #include "CNetCapture.h"
 #include <algorithm>
 #include <memory>
- // #define PCAP_DONT_INCLUDE_PCAP_BPF_H
- // #include <Packet32.h>
+// #define PCAP_DONT_INCLUDE_PCAP_BPF_H
+// #include <Packet32.h>
 #include <pcap.h>
 #include <ntddndis.h>
 #include <Common.h>
@@ -46,7 +25,20 @@
 #include <algorithm>
 #include <string>
 #include <boost/asio.hpp>
+#include <pjsip.h>
+#include <pjlib.h>
+#include <pjlib-util.h>
+#include <pjsua.h>
 
+#include <pjmedia.h>
+#include <exosip2/exosip.h>
+#include <osip2/osip.h>
+#include <osipparser2/osip_parser.h>
+const std::string THIS_FILE = "MyApp.cpp";
+
+#ifndef PJSIP_TEST_MEM_SIZE
+#  define PJSIP_TEST_MEM_SIZE       (2*1024*1024)
+#endif
 std::vector<std::shared_ptr<NetworkAdapterInfo>> CNetCapture::m_devices;
 std::vector<std::shared_ptr<CCaptureThreadWrapper>> CNetCapture::m_vtCaptureThreadWrappers;
 CNetCapture::CNetCapture() noexcept
@@ -57,34 +49,58 @@ CNetCapture::CNetCapture() noexcept
 
 CNetCapture::~CNetCapture() noexcept
 {
-    //停止抓包线程，关闭管理句柄
+    //停止抓包线程，关闭管理句�?
     StopCapture();
     //清空设备列表
     m_devices.clear();
     m_devices.shrink_to_fit();
-
+    pj_shutdown();
 }
 
 
 size_t CNetCapture::Init() noexcept
 {
+    pj_init();
+    pjlib_util_init();
     return GetDevicesInfo(m_devices);
 }
 
 bool CNetCapture::StartCapture() noexcept
 {
+
     m_vtCaptureThreadWrappers.clear();
     m_vtCaptureThreadWrappers.shrink_to_fit();
     for (size_t i = 0; i < m_devices.size(); i++)
     {
 
-        //创建线程并记录起来
+        //创建线程并记录起�?
         auto pCaptureThreadWrapper =
             std::make_shared<CCaptureThreadWrapper>(m_devices[i].get());
         m_vtCaptureThreadWrappers.emplace_back(pCaptureThreadWrapper);
 
         /* code */
     }
+    //测试pjsua的使用
+    pj_status_t status;
+
+    // 初始化 PJSUA
+    status = pjsua_create();
+    if (status != PJ_SUCCESS) return -1;
+
+    // 初始化 PJSUA 配置
+    pjsua_config cfg;
+    pjsua_config_default(&cfg);
+
+    // 初始化 PJSUA 日志配置
+    pjsua_logging_config log_cfg;
+    pjsua_logging_config_default(&log_cfg);
+    log_cfg.console_level = 4;
+
+    // 初始化并启动 PJSUA
+    status = pjsua_init(&cfg, &log_cfg, NULL);
+    if (status != PJ_SUCCESS) return -1;
+
+
 
     return true;
 }
@@ -105,7 +121,7 @@ bool CNetCapture::StopCapture() noexcept
 /*!
    @note 得到网络适配器的MAC地址，本功能需要Npcap支持
    @param[in] szPcapAdapterID 传入网络适配器的ID
-   @returns 返回MAC地址字符串
+   @returns 返回MAC地址字符�?
 */
 std::string CNetCapture::GetMacAddress(const std::string& szPcapAdapterID) const
 {
@@ -136,7 +152,7 @@ std::string CNetCapture::GetMacAddress(const std::string& szPcapAdapterID) const
                             pCurrAddresses->PhysicalAddress[2], pCurrAddresses->PhysicalAddress[3],
                             pCurrAddresses->PhysicalAddress[4], pCurrAddresses->PhysicalAddress[5]);
 
-                        std::transform(strMacAddress.begin(), strMacAddress.end(), strMacAddress.begin(), ::toupper); //转换为大写
+                        std::transform(strMacAddress.begin(), strMacAddress.end(), strMacAddress.begin(), ::toupper); //转换为大�?
                         break;
                     }
                 }
@@ -169,16 +185,16 @@ std::string CNetCapture::GetMacAddress(const std::string& szPcapAdapterID) const
         mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     std::string strMacAddress(mac_str);
-    std::transform(strMacAddress.begin(), strMacAddress.end(), strMacAddress.begin(), ::toupper); //转换为大写
+    std::transform(strMacAddress.begin(), strMacAddress.end(), strMacAddress.begin(), ::toupper); //转换为大�?
     close(fd);
 #endif
     return strMacAddress;
 }
 
 /*!
-   @note 得到网络适配器的DeviceName，本功能需要Npcap支持，并去除额外的Pcap组织的无效头尾信息
+   @note 得到网络适配器的DeviceName，本功能需要Npcap支持，并去除额外的Pcap组织的无效头尾信�?
    @param[out] strValue 返回格式化后的DeviceName
-   @returns 返回MAC地址字符串
+   @returns 返回MAC地址字符�?
   */
 std::string CNetCapture::GetNetworkAdapterDeviceNameByPcap(const std::string& strValue) const
 {
@@ -200,13 +216,13 @@ std::string CNetCapture::GetNetworkAdapterDeviceNameByPcap(const std::string& st
 
 
 /*!
-   @note 得到网络适配器的DeviceName，本功能需要Npcap支持，并去除额外的Pcap组织的无效头尾信息
+   @note 得到网络适配器的DeviceName，本功能需要Npcap支持，并去除额外的Pcap组织的无效头尾信�?
    @param[out] strValue 返回格式化后的DeviceName
-   @returns 返回MAC地址字符串
+   @returns 返回MAC地址字符�?
 */
 std::string CNetCapture::GetNetworkAdapterIDByPcap(const std::string& strValue) const
 {
-    //去除一些Pcap组织的无效头尾信息
+    //去除一些Pcap组织的无效头尾信�?
     std::string strSrc = strValue;
     size_t nIndex = strSrc.rfind("/");
     std::string strRet;
@@ -242,7 +258,7 @@ size_t CNetCapture::GetDevicesInfo(std::vector<std::shared_ptr<NetworkAdapterInf
         pNetAdapterInfo->Name = iDev->description;
         //pNetAdapterInfo->Name = GetNetworkAdapterDeviceNameByPcap(iDev->description);
         pNetAdapterInfo->Flags = iDev->flags;
-        if (iDev->addresses != nullptr) //有些设备并没有分配IPV4地址,就无需加入可用列表了
+        if (iDev->addresses != nullptr) //有些设备并没有分配IPV4地址,就无需加入可用列表�?
         {
             const pcap_addr_t* iAddr = nullptr;
             for (iAddr = iDev->addresses; iAddr != nullptr; iAddr = iAddr->next)
@@ -286,3 +302,382 @@ size_t CNetCapture::GetDevicesInfo(std::vector<std::shared_ptr<NetworkAdapterInf
 }
 
 
+int CNetCapture::txdata_test_uri_params(const std::string& strSipMsg)
+{
+    pjsip_endpoint* endpt;
+    pj_caching_pool caching_pool;
+    pj_status_t rc;
+    pj_status_t status;
+    if ((rc = pj_init()) != PJ_SUCCESS)
+    {
+
+        return rc;
+    }
+    if ((rc = pjlib_util_init()) != PJ_SUCCESS) {
+
+        return rc;
+    }
+    // status = init_report();
+    // if (status != PJ_SUCCESS)
+    //     return status;
+
+    pj_caching_pool_init(&caching_pool, &pj_pool_factory_default_policy,
+        PJSIP_TEST_MEM_SIZE);
+
+    rc = pjsip_endpt_create(&caching_pool.factory, "endpt", &endpt);
+    if (rc != PJ_SUCCESS) {
+        pj_caching_pool_destroy(&caching_pool);
+        return rc;
+    }
+
+    char msgbuf[512];
+    pj_str_t target = pj_str((char*)"sip:alice@wonderland:5061;x-param=param%201"
+        "?X-Hdr-1=Header%201"
+        "&X-Empty-Hdr=");
+    pj_str_t contact;
+    pj_str_t pname = pj_str((char*)"x-param");
+    pj_str_t hname = pj_str((char*)"X-Hdr-1");
+    pj_str_t hemptyname = pj_str((char*)"X-Empty-Hdr");
+    pjsip_from_hdr* from_hdr;
+    pjsip_to_hdr* to_hdr;
+    pjsip_contact_hdr* contact_hdr;
+    pjsip_generic_string_hdr* hdr;
+    pjsip_tx_data* tdata;
+    pjsip_sip_uri* uri;
+    pjsip_param* param;
+    pjsip_via_hdr* via;
+    pjsip_parser_err_report err_list;
+    pjsip_msg* msg;
+    pj_ssize_t len;
+
+
+    //PJ_LOG(3, (THIS_FILE, "   header param in URI to create request"));
+
+    /* Due to #930, contact argument is now parsed as Contact header, so
+     * must enclose it with <> to make it be parsed as URI.
+     */
+    pj_ansi_snprintf(msgbuf, sizeof(msgbuf), "<%.*s>",
+        (int)target.slen, target.ptr);
+    contact.ptr = msgbuf;
+    contact.slen = strlen(msgbuf);
+
+    /* Create request with header param in target URI. */
+    status = pjsip_endpt_create_request(endpt, &pjsip_invite_method, &target,
+        &target, &target, &contact, NULL, -1,
+        NULL, &tdata);
+    if (status != 0) {
+        //app_perror("   error: Unable to create request", status);
+        return -200;
+    }
+    // msg = pjsip_parse_msg(tdata->pool, msgbuf, len, &err_list);
+
+
+    /* Fill up the Via header to prevent syntax error on parsing */
+    via = (pjsip_via_hdr*)pjsip_msg_find_hdr(tdata->msg, PJSIP_H_VIA, NULL);
+    via->transport = pj_str((char*)"TCP");
+    via->sent_by.host = pj_str((char*)"127.0.0.1");
+
+    /* Print and parse the request.
+     * We'll check that header params are not present in
+     */
+
+
+
+    len = pjsip_msg_print(tdata->msg, msgbuf, sizeof(msgbuf));
+    if (len < 1) {
+        //PJ_LOG(3, (THIS_FILE, "   error: printing message"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -250;
+    }
+    msgbuf[len] = '\0';
+
+    PJ_LOG(5, (THIS_FILE.c_str(), "%ld bytes request created:--begin-msg--\n"
+        "%s\n"
+        "--end-msg--", len, msgbuf));
+
+    /* Now parse the message. */
+    pj_list_init(&err_list);
+
+    msg = pjsip_parse_msg(tdata->pool, msgbuf, len, &err_list);
+    if (msg == NULL) {
+        pjsip_parser_err_report* e;
+
+        //PJ_LOG(3, (THIS_FILE, "   error: parsing message message"));
+
+        e = err_list.next;
+        while (e != &err_list) {
+            PJ_LOG(3, (THIS_FILE.c_str(), "     %s in line %d col %d hname=%.*s",
+                pj_exception_id_name(e->except_code),
+                e->line, e->col + 1,
+                (int)e->hname.slen,
+                e->hname.ptr));
+            e = e->next;
+        }
+
+        pjsip_tx_data_dec_ref(tdata);
+        return -256;
+    }
+
+    /* Check the existence of port, other_param, and header param.
+     * Port is now allowed in To and From header.
+     */
+     /* Port in request URI. */
+    uri = (pjsip_sip_uri*)pjsip_uri_get_uri(msg->line.req.uri);
+    if (uri->port != 5061) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: port not present in request URI"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -260;
+    }
+    /* other_param in request_uri */
+    param = pjsip_param_find(&uri->other_param, &pname);
+    if (param == NULL || pj_strcmp2(&param->value, "param 1") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: x-param not present in request URI"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -261;
+    }
+    /* header param in request uri. */
+    if (!pj_list_empty(&uri->header_param)) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: hparam in request URI"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -262;
+    }
+
+    /* Port in From header. */
+    from_hdr = (pjsip_from_hdr*)pjsip_msg_find_hdr(msg, PJSIP_H_FROM, NULL);
+    uri = (pjsip_sip_uri*)pjsip_uri_get_uri(from_hdr->uri);
+    if (uri->port != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: port most not exist in From header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -270;
+    }
+    /* other_param in From header */
+    param = pjsip_param_find(&uri->other_param, &pname);
+    if (param == NULL || pj_strcmp2(&param->value, "param 1") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: x-param not present in From header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -271;
+    }
+    /* header param in From header. */
+    if (!pj_list_empty(&uri->header_param)) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: hparam in From header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -272;
+    }
+
+
+    /* Port in To header. */
+    to_hdr = (pjsip_to_hdr*)pjsip_msg_find_hdr(msg, PJSIP_H_TO, NULL);
+    uri = (pjsip_sip_uri*)pjsip_uri_get_uri(to_hdr->uri);
+    if (uri->port != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: port most not exist in To header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -280;
+    }
+    /* other_param in To header */
+    param = pjsip_param_find(&uri->other_param, &pname);
+    if (param == NULL || pj_strcmp2(&param->value, "param 1") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: x-param not present in To header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -281;
+    }
+    /* header param in From header. */
+    if (!pj_list_empty(&uri->header_param)) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: hparam in To header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -282;
+    }
+
+
+
+    /* Port in Contact header. */
+    contact_hdr = (pjsip_contact_hdr*)pjsip_msg_find_hdr(msg, PJSIP_H_CONTACT, NULL);
+    uri = (pjsip_sip_uri*)pjsip_uri_get_uri(contact_hdr->uri);
+    if (uri->port != 5061) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: port not present in Contact header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -290;
+    }
+    /* other_param in Contact header */
+    param = pjsip_param_find(&uri->other_param, &pname);
+    if (param == NULL || pj_strcmp2(&param->value, "param 1") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: x-param not present in Contact header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -291;
+    }
+    /* header param in Contact header. */
+    if (pj_list_empty(&uri->header_param)) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: hparam is missing in Contact header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -292;
+    }
+    /* Check for X-Hdr-1 */
+    param = pjsip_param_find(&uri->header_param, &hname);
+    if (param == NULL || pj_strcmp2(&param->value, "Header 1") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: hparam is missing in Contact header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -293;
+    }
+    /* Check for X-Empty-Hdr */
+    param = pjsip_param_find(&uri->header_param, &hemptyname);
+    if (param == NULL || pj_strcmp2(&param->value, "") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: hparam is missing in Contact header"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -294;
+    }
+
+
+    /* Check that headers are present in the request. */
+    hdr = (pjsip_generic_string_hdr*)
+        pjsip_msg_find_hdr_by_name(msg, &hname, NULL);
+    if (hdr == NULL || pj_strcmp2(&hdr->hvalue, "Header 1") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: header X-Hdr-1 not created"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -300;
+    }
+
+    hdr = (pjsip_generic_string_hdr*)
+        pjsip_msg_find_hdr_by_name(msg, &hemptyname, NULL);
+    if (hdr == NULL || pj_strcmp2(&param->value, "") != 0) {
+        PJ_LOG(3, (THIS_FILE.c_str(), "   error: header X-Empty-Hdr not created"));
+        pjsip_tx_data_dec_ref(tdata);
+        return -330;
+    }
+
+    pjsip_tx_data_dec_ref(tdata);
+    return 0;
+}
+
+
+int CNetCapture::ParserSipMessage(const std::string& strSipMsg)
+{
+
+
+    osip_t* osip;
+    osip_message_t* sip_msg;
+    // char* sip_message_str = "INVITE sip:bob@biloxi.com SIP/2.0\r\nVia: SIP/2.0/UDP server10.biloxi.com;branch=z9hG4bKnashds8\r\n...\r\n";
+    int i;
+
+    // 初始化oSIP
+    i = osip_init(&osip);
+    if (i != 0) {
+        // 初始化失败
+        return -1;
+    }
+
+    // 解析SIP消息
+    i = osip_message_init(&sip_msg);
+    if (i != 0) {
+        // 消息初始化失败
+        osip_free(osip);
+        return -1;
+    }
+
+    i = osip_message_parse(sip_msg, strSipMsg.c_str(), strSipMsg.length());
+
+    if (i != 0) {
+        // 消息解析失败
+        osip_message_free(sip_msg);
+        osip_free(osip);
+        return -1;
+    }
+    osip_body_t* body;
+    int j = 0;
+
+    j = osip_message_get_body(sip_msg, 0, &body);
+    osip_list_t* headers = body->headers;
+
+    // 在这里处理解析后的SIP消息，例如访问消息头
+    // ...
+
+    // 清理
+    osip_message_free(sip_msg);
+    osip_free(osip);
+    return 0;
+}
+/* Syntax error handler for parser. */
+static void on_syntax_error(pj_scanner* scanner)
+{
+    PJ_UNUSED_ARG(scanner);
+    PJ_THROW(PJSIP_SYN_ERR_EXCEPTION);
+}
+
+int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_str) {
+    pj_status_t status;
+    pjsip_msg* msg = NULL;
+    // pj_scan_state scan_state;
+    pj_pool_t* pool;
+    pjsip_endpoint* endpt;
+    pj_caching_pool caching_pool;
+    pjmedia_sdp_session* sdp_session = NULL;
+    pj_scanner scanner;
+    pj_thread_desc desc;
+    pj_thread_t* thread = NULL;
+    // 注册当前线程
+    status = pj_thread_register("MyPJSIPThread", desc, &thread);
+    if (status != PJ_SUCCESS) {
+        // 处理错误
+    }
+    pj_caching_pool_init(&caching_pool, &pj_pool_factory_default_policy,
+
+        PJSIP_TEST_MEM_SIZE);
+
+    pj_status_t rc = pjsip_endpt_create(&caching_pool.factory, "endpt", &endpt);
+    if (rc != PJ_SUCCESS) {
+        pj_caching_pool_destroy(&caching_pool);
+        return rc;
+    }
+
+    // 初始化扫描状态
+    pj_scan_init(&scanner, (char*)sip_message_str.c_str(), sip_message_str.length(), 0, &on_syntax_error);
+
+    // 创建内存池
+    pool = pj_pool_create(&caching_pool.factory, "sip_parse", 4000, 4000, NULL);
+    // 解析 SIP 消息
+    pjsip_parser_err_report err_list;
+    pj_list_init(&err_list);
+    pjsip_msg* msg_t = pjsip_parse_msg(pool, (char*)sip_message_str.c_str(), sip_message_str.length(), &err_list);
+
+    if (status == PJ_SUCCESS && msg_t != NULL) {
+        // 获取 From 头部
+       // 获取 From 头部
+        pjsip_from_hdr* from_hdr = (pjsip_from_hdr*)pjsip_msg_find_hdr(msg_t, PJSIP_H_FROM, NULL);
+        if (from_hdr != NULL) {
+            // 获取 From 头部的显示名
+            pj_str_t display_name;
+            // 获取 From 头部的地址
+            pjsip_uri* uri = from_hdr->uri;
+
+            // 检查 URI 类型是否为 pjsip_name_addr
+            if (PJSIP_URI_SCHEME_IS_SIP(uri) || PJSIP_URI_SCHEME_IS_SIPS(uri)) {
+                pjsip_sip_uri* sip_uri = (pjsip_sip_uri*)pjsip_uri_get_uri(uri);
+                // 获取 From 头部的地址的用户名
+                pj_str_t username = sip_uri->user;
+                // 获取 From 头部的地址的域名
+                pj_str_t host = sip_uri->host;
+                // 获取 From 头部的地址的显示名
+                pjsip_name_addr* name_addr = (pjsip_name_addr*)uri;
+                display_name = name_addr->display;
+
+                // 打印 To 头部信息
+                //PJ_LOG(3, ("YourApp", "To: %.*s@%.*s", (int)username.slen, username.ptr, (int)host.slen, host.ptr));
+                std::string strFrom = std::string(display_name.ptr, display_name.slen) + "<" + std::string(username.ptr, username.slen) + "@" + std::string(host.ptr, host.slen) + ">";
+                LOG(INFO) << "From: " << strFrom;
+
+            }
+        }
+    }
+    else {
+        // 解析失败处理
+    }
+    // 清理资源
+    pj_pool_release(pool);
+
+    // 销毁 SIP 端点
+    pjsip_endpt_destroy(endpt);
+    pj_pool_release(pool);
+    pj_caching_pool_destroy(&caching_pool);
+
+    // 清理扫描状态
+    //pj_scan_fini(&scan_state);
+    return 0;
+}

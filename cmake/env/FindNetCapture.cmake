@@ -1,4 +1,5 @@
-
+message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")
+message(STATUS "[NetCapture 库信息] ")
 
 # LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/out/install/lib/${NETCAPTURE_LIB_NAME}")
 # foreach(module_name ${CMAKE_MODULE_PATH})

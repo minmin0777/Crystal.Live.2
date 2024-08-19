@@ -1,3 +1,5 @@
+message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")
+message(STATUS "[Codec 库信息] ")
 
 
 # LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/out/install/lib/Codec")

@@ -1,4 +1,5 @@
-
+message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")
+message(STATUS "[Common 库信息] ")
 
 # LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/out/install/lib/Common")
 # foreach(module_name ${CMAKE_MODULE_PATH})

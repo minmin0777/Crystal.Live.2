@@ -15,6 +15,10 @@ include(GNUInstallDirs)
 
 #windows系统动态库生成lib文件命令
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+# 设置 CMAKE_POSITION_INDEPENDENT_CODE 属性来启用 -fPIC
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 #设置版本信息
 set(version 3.4.1)
 

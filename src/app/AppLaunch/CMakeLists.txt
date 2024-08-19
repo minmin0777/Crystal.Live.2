@@ -20,6 +20,8 @@ set(CMAKE_AUTOMOC ON)
 #CMAKE_AUTORCC：当设置为ON时，CMake会自动处理.qrc文件（Qt资源文件），并生成相应的C++代码。这意味着你不需要手动运行rcc（资源编译器）来处理.qrc文件。
 set(CMAKE_AUTORCC ON)
 
+# 设置 CMAKE_POSITION_INDEPENDENT_CODE 属性来启用 -fPIC
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #查找QT6的库
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
@@ -197,6 +199,8 @@ set(CMAKE_CXX_FLAGS "/EHsc ${CMAKE_CXX_FLAGS}")
 message(STATUS "添加预编译头文件 -D${PROJECT_NAME}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
 
+
+
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
@@ -223,7 +227,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
 
 
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindFFMPEG.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)
+# target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)
 
 
 

@@ -1,4 +1,5 @@
-
+message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")
+message(STATUS "[Audio 库信息] ")
 
 # LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/out/install/lib/Audio")
 # foreach(module_name ${CMAKE_MODULE_PATH})

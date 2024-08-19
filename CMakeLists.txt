@@ -76,8 +76,13 @@ include(./cmake/env/FindBoost.cmake)
 include(./cmake/env/FindQT6.cmake)
 #查找FFmpeg库
 include(./cmake/env/FindFFMPEG.cmake)
+#查找PJSIP库
+include(./cmake/env/FindPjsip.cmake)
+#查找eXpsip与osip2库
+include(./cmake/env/Findexosip.cmake)
 
 include(./cmake/CreatePDB.cmake)
+
 
 
 #添加自定义的CMake选项，用于控制是否编译第三方库，开启时会同时编译第三方库，关闭时只编译项目本身

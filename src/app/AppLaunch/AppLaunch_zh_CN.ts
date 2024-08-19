@@ -8,12 +8,12 @@
         <translation type="obsolete">你好</translation>
     </message>
     <message>
-        <location filename="main.cpp" line="174"/>
+        <location filename="main.cpp" line="178"/>
         <source>Start Capture</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="193"/>
+        <location filename="main.cpp" line="197"/>
         <source>Hello, world!</source>
         <translation type="unfinished">你好时间！</translation>
     </message>

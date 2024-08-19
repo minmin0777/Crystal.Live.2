@@ -15,6 +15,11 @@ include(GNUInstallDirs)
 
 #windows系统动态库生成lib文件命令
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+# 设置 CMAKE_POSITION_INDEPENDENT_CODE 属性来启用 -fPIC
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+
 #设置版本信息
 set(version 3.4.1)
 #设定当前的项目为 Cryctal.Live.2
@@ -24,13 +29,15 @@ project(Codec VERSION ${version} LANGUAGES CXX)
 
 include("${CMAKE_SOURCE_DIR}/cmake/CreatePDB.cmake")
 
-
+file(GLOB SOURCES "src/*.cpp")
+file(GLOB HEADERS "include/*.h")
 
 add_library(${PROJECT_NAME} SHARED "")
 # 
 add_dependencies(${PROJECT_NAME} Core::Common)
 target_sources(${PROJECT_NAME}
-  PRIVATE main.cpp include/Codec.h ./include/Codec.Export.h
+  PRIVATE ${SOURCES} ${HEADERS}
+
  )
 # message(STATUS "Core.Codec--头文件目录:${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
@@ -54,7 +61,14 @@ include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindFFMPEG.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)
+target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG::avcodec 
+                                              FFMPEG::avformat 
+                                              FFMPEG::avutil 
+                                              FFMPEG::swscale 
+                                              FFMPEG::swresample 
+                                              FFMPEG::avfilter)
+# target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)
+
 
 #创建Core.Codec.Export.h文件，处理Core.Codec的导出接口
 generate_export_header(${PROJECT_NAME}
@@ -106,6 +120,8 @@ write_basic_package_version_file(
   COMPATIBILITY AnyNewerVersion
 )
 
+# 定义宏以帮助控制符号的导出/导入
+# target_compile_definitions(Codec PRIVATE CODEC_EXPORTS)
 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost_lib)

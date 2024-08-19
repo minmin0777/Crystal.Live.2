@@ -26,8 +26,9 @@
 #include "Utility.h"
 #include <format>
 #include <iostream>
-
-
+#include <sstream>
+#include <iomanip>
+#include <boost/algorithm/hex.hpp>
 namespace Common
 {
 
@@ -129,5 +130,14 @@ namespace Common
     /*------------------------------------------------------------------------------------------------------------------------------*/
 
 
+    std::string Utility::toHex(const char* data, size_t length)
+    {
+        std::string result;
+        boost::algorithm::hex(data, data + length, std::back_inserter(result));
+
+        std::transform(result.begin(), result.end(), result.begin(),
+            [](unsigned char c) { return std::tolower(c); });
+        return result;
+    }
 
 }

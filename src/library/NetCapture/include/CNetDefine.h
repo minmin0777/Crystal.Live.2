@@ -22,7 +22,7 @@
 #include <string>
 #include <iostream>
 #include "pcap.h"
-
+#include <Common.h>
 #define MAX_PATH          260
 
  /**
@@ -297,27 +297,51 @@ typedef struct _ChannelQuePackage
 
 typedef struct _pcap_package
 {
+    enum class ENUM_PACKAGE_TYPE
+    {
+        UNKNOWN = -1,
+        RTP = 0,
+        DCHANNEL = 1,
+        CONTROL = 2
+    };
+
     _pcap_package()
     {
-        memset(&header, NULL, sizeof(pcap_pkthdr));
-        pData = nullptr;
+        clear();
     }
     ~_pcap_package()
+    {
+        clear();
+    }
+    void clear()
     {
         memset(&header, NULL, sizeof(pcap_pkthdr));
         if (pData)
         {
             delete[] pData;
+            LOG(DEBUG) << "delete pData";
         }
         pData = nullptr;
-        //LOG(DEBUG) << "delete pcap_package\n";
+        if (pContent)
+        {
+            delete[] pContent;
+            LOG(DEBUG) << "delete pContent";
+        }
+        pContent = nullptr;
+        nPackageType = ENUM_PACKAGE_TYPE::UNKNOWN;
+        nContentLen = 0;
     }
-
 
 public:
     pcap_pkthdr header;
-    char* pData;
+    char* pData = nullptr;
+    //UNKNOWN:-1; 
+    ENUM_PACKAGE_TYPE nPackageType;
+    //内容存放在pData中，pData的长度为header.len，以太网数据包的长度为header.len-14，因为有14字节的以太网数据包头
+    char* pContent = nullptr;
+    uint32_t nContentLen = 0;
 }PCAP_PACKAGE, * PPCAP_PACKAGE;
+
 
 typedef enum
 {

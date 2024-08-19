@@ -28,6 +28,8 @@
 #include <atomic>
 #include <Common.h>
 #include <CCaptureThreadWrapper.h>
+#include <pjsip.h>
+#include <pjlib.h>
  /**
   * @brief 网络抓包类
   * @version 0.0.1
@@ -87,7 +89,10 @@ public:
      --------------------------------------------------------------------------------------------------------------------------*/
     bool StopCapture() noexcept;
 
+    static int txdata_test_uri_params(const std::string& strSipMsg);
 
+    static int ParserSipMessage(const std::string& strSipMsg);
+    static int parse_sip_message_from_string(const std::string& sip_message_str);
 protected:
 
     /*! --------------------------------------------------------------------------------------------------------------------------

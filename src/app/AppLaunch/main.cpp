@@ -44,7 +44,7 @@
   *
   *            佛祖保佑     永不宕机     永无BUG
   */
-
+  /** ----------------------------------------------------------------------------------------------------------------------------------- */
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -139,6 +139,10 @@ int main(int argc, char* argv[]) {
   Config::init();
   NetCapture::Init();
   Codec::GetVersion();
+  Codec::CAudioCodec codec;
+  codec.GetVersion();
+  //codec.Encode("Hello, world!");
+
   //Codec::Init();
   // std::vector<std::shared_ptr<NetworkAdapterInfo>> vtDevices;
   // size_t nDevCount = NetCapture::GetDevicesInfo(vtDevices);
@@ -235,15 +239,7 @@ int main(int argc, char* argv[]) {
   //std::cout << "Audio version: " << Audio::GetVersion() << std::endl;
   std::cout << "Codec version: " << Codec::GetVersion() << std::endl;
 
-  // file_backend->set_file_collector(sinks::file::make_collector(
-  //   keywords::target = "log/20240601",               // 每天创建一个新的目录来存储日志文件
-  //   keywords::max_size = 16 * 1024 * 1024,          // 单个日志文件的最大大小
-  //   keywords::min_free_space = 100 * 1024 * 1024,   // 磁盘最小剩余空间
-  //   keywords::max_files = 512                      // 存储的日志文件数量上限
-  // ));
 
-  // file_backend->scan_for_files(sinks::file::scan_matching);
-  //
   while (true)
   {
 

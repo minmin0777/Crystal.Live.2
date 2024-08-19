@@ -142,8 +142,11 @@ void Logger::custom_open_handler2(sinks::text_file_backend::stream_type& file_st
 {
     // 在文件打开时做一些自定义的处理，比如修改文件权限、重命名文件等
     // 这里我们只是简单地输出一条日志
+    std::string strInitContent;
+    strInitContent = std::format("Live.{0}----日志文件初始化\n", m_strChannelName);
+
     file_stream << OUTPUT_LINE;
-    file_stream << m_strChannelName << "----日志文件初始化\n";
+    file_stream << m_strChannelName << strInitContent;
     file_stream << OUTPUT_LINE;
 }
 

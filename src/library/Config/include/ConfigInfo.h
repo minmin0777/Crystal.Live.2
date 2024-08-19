@@ -82,7 +82,8 @@ public:
      * @warning C++11 标准保证了当一个线程首次访问局部静态变量时，其初始化将是线程安全的
      */
     static CConfigInfo& Get() {
-        static CConfigInfo instance; // 局部静态变量
+         // 局部静态变量
+        static CConfigInfo instance;
         return instance;
     }
 protected:
