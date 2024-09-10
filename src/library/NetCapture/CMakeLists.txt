@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 3.20)
 #
 
 message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")
-
+message(STATUS "[NetCapture 库信息]")
 include(CMakePackageConfigHelpers)
 #使用GenerateExportHeader模块生成Core.Common.Export.h文件，该文件用于在其他项目中使用Core.Common的导出接口
 include(GenerateExportHeader)
@@ -41,7 +41,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
 #设置版本信息
-set(version 3.4.1)
+set (Product_VERSION_MAJOR 1)
+set (Product_VERSION_MINOR 0)
+set (Product_VERSION_PATCH 1)
+set (Product_VERSION_BUILD 1)
+
+set (version "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
 
 #设定C++20标准
 set(CMAKE_CXX_STANDARD 20)
@@ -49,9 +54,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #CMake将配置编译器只使用标准C++，不使用任何编译器特定的扩展。这可以帮助确保你的代码的可移植性，因为它不依赖于任何特定编译器的特性。
 set(CMAKE_CXX_EXTENSIONS OFF)   
 
-#设定当前的项目为 Cryctal.Live.2
-project(NetCapture VERSION ${version} LANGUAGES CXX)
+set(description "NetCapture is a library that provides common functions for the Crystal.Live.2 project.")
 
+#设定当前的项目为 Cryctal.Live.2
+project(NetCapture VERSION ${version} LANGUAGES CXX DESCRIPTION "${description}")
 
 if(MSVC)
   # 设置运行时库
@@ -68,7 +74,14 @@ endif()
 add_library(${PROJECT_NAME} SHARED "")
 remove_definitions(/showIncludes)
 
+#VersionManage.cmake 文件中包含了版本信息的配置,windows环境下并会设置rc文件
+include("${CMAKE_SOURCE_DIR}/cmake/version/VersionManage.cmake")
 
+set_version_infomation(
+  ${PROJECT_NAME} 
+  ${version}
+  ${description}
+  )
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -84,9 +97,14 @@ set(CMAKE_CXX_FLAGS "/EHsc ${CMAKE_CXX_FLAGS}")
 
 message(STATUS "添加预编译头文件 -D${PROJECT_NAME}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
+# 添加WIN32_LEAN_AND_MEAN宏定义,防止windows.h与winsock2.h冲突
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
 
 target_sources(${PROJECT_NAME}
   PRIVATE ${SOURCES} ${HEADERS}
+  res/${PROJECT_NAME}.rc
  )
 # message(STATUS "Core.Common--头文件目录:${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -182,6 +200,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE PCAP_PACKET)
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
+#链接到Core.Config库
+include("${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake")
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
+
+
 target_link_libraries(${PROJECT_NAME} PRIVATE PJSIP::core)
 
 
@@ -193,13 +216,24 @@ target_link_libraries(${PROJECT_NAME} PRIVATE EXOSIP::exosip)
 target_link_libraries(${PROJECT_NAME} PRIVATE EXOSIP::osip2)
 target_link_libraries(${PROJECT_NAME} PRIVATE EXOSIP::osip2parser)
 
+#加入RecordEngine库的头文件位置，用于在项目中引用RecordEngine库的头文件Record.h
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/library/RecordEngine/include)
+
+#加入RecordEngine库的源文件位置，用于在项目中引用RecordEngine库的源文件Record.cpp
+target_sources(${PROJECT_NAME}
+  PRIVATE ${CMAKE_SOURCE_DIR}/src/library/RecordEngine/src/Record.cpp
+ )
+
+message(STATUS "路径:${CMAKE_SOURCE_DIR}/src/library/RecordEngine/include")
+# include(${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake)
+# target_link_libraries(${PROJECT_NAME} PRIVATE Core::RecordEngine)
 # add_compile_definitions(${PROJECT_NAME}_EXPORTS)
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
 
-
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
@@ -208,6 +242,10 @@ install(TARGETS ${PROJECT_NAME}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 
 )
+
+
+
+
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB HEADERS "include/*.h")
@@ -227,6 +265,7 @@ endforeach()
 
 install(FILES ./include/${PROJECT_NAME}.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 install(FILES ./include/${PROJECT_NAME}.Export.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+install(FILES ./include/CNetDefine.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 install(DIRECTORY ./include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
 export(EXPORT ${PROJECT_NAME}
@@ -264,6 +303,22 @@ else()
     # 在其他情况下执行的操作
     
 endif()
+
+include(${CMAKE_SOURCE_DIR}/cmake/env/build_info.cmake)
+set(LOG_Content "---")
+get_build_infomation(${LOG_Content})
+
+foreach(log_text ${retValue})
+  add_custom_command(TARGET ${PROJECT_NAME}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "${log_text}" >> ${CMAKE_BINARY_DIR}/log.md
+  COMMENT "Write log"
+  DEPENDS ALWAYS
+  )
+
+  message(STATUS "LOG:${log_text}")
+endforeach()
+
 
 copy_pdb_file(${PROJECT_NAME} ${version})
 

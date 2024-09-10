@@ -1,13 +1,13 @@
 ﻿/*————————————————————————————————————————————————————————————————————————————————————————
  * @Author: jason minmin0777@126.com
- * @Date: 2024-07-26 11:56:49
+ * @Date: 2024-08-07 14:15:13
  * @LastEditors: jason minmin0777@126.com
- * @LastEditTime: 2024-07-26 13:11:42
+ * @LastEditTime: 2024-08-26 17:12:03
  * @FilePath: \Crystal.Live.2\src\library\common\include\ExceptionEx.h
  * @Description:
  * @
  * @#|----------------------------------------------------------------------------|
- * @#|  Remark         : Description                                              |
+ * @#|  ClassName         : Description                                           |
  * @#|----------------------------------------------------------------------------|
  * @#|  Change History :                                                          |
  * @#|  <Date>     | <Version> | <Author>       | <Description>                   |
@@ -18,6 +18,7 @@
  * @#|----------------------------------------------------------------------------|
  * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  ————————————————————————————————————————————————————————————————————————————————————————*/
+
 #pragma once
 #include <exception>
 #include <string>
@@ -48,3 +49,14 @@ public:
         return messageW;
     }
 };
+
+
+// 自定义断言宏
+#define CUSTOM_ASSERT(expr) \
+    if (!(expr)) { \
+        std::stringstream ss; \
+        ss << "Assertion failed (condition): " << #expr \
+                  << " | file:" << __FILE__ \
+                  << ", line:" << __LINE__ ;\
+        throw ExceptionEx(ss.str()); \
+    }

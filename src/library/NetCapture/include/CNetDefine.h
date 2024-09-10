@@ -19,10 +19,12 @@
  * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  ————————————————————————————————————————————————————————————————————————————————————————*/
 #pragma once
+#ifndef NET_DEFINE_H
+#define NET_DEFINE_H
 #include <string>
 #include <iostream>
-#include "pcap.h"
 #include <Common.h>
+#include <pcap.h>
 #define MAX_PATH          260
 
  /**
@@ -44,13 +46,16 @@ public:
     }
 
 public:
-    std::string ID; //网络适配器PCAP_ID
-    std::string Name; //网络适配器名称
-    std::string IpAddress; //本机IP地址
-    std::string BroadAddress; //网关地址
-    std::string NetmaskAddress; //子网掩码
-    std::string MACAddress; //网络适配器 MAC地址
-    uint32_t Flags = 0x00;           //网络适配器 类型，0x00默认为空
+    std::string ID;                     //网络适配器PCAP_ID
+    std::string Name;                   //网络适配器名称
+    std::string IpAddress;              //本机IP地址
+    std::string BroadAddress;           //网关地址
+    std::string NetmaskAddress;         //子网掩码
+    std::string MACAddress;             //网络适配器 MAC地址
+    uint32_t Flags = 0x00;              //网络适配器 类型，0x00默认为空
+    bool Enabled = false;               //是否启用
+    bool IsLoopback = false;            //是否为环回地址
+
 };
 
 
@@ -307,11 +312,17 @@ typedef struct _pcap_package
 
     _pcap_package()
     {
+
         clear();
+        //总数量
+        //nPackageCount++;
     }
     ~_pcap_package()
     {
         clear();
+        //总数量减少
+        //nPackageCount--;
+        //LOG(DEBUG) << L"释放内存" << L"总数量:" << nPackageCount;
     }
     void clear()
     {
@@ -319,27 +330,49 @@ typedef struct _pcap_package
         if (pData)
         {
             delete[] pData;
-            LOG(DEBUG) << "delete pData";
+            //LOG(DEBUG) << "delete pData";
         }
         pData = nullptr;
         if (pContent)
         {
             delete[] pContent;
-            LOG(DEBUG) << "delete pContent";
+            //LOG(DEBUG) << "delete pContent";
         }
         pContent = nullptr;
         nPackageType = ENUM_PACKAGE_TYPE::UNKNOWN;
         nContentLen = 0;
     }
+    bool CompareContent(const std::shared_ptr<_pcap_package> pCurPackage)
+    {
+        if (pCurPackage == nullptr)
+        {
+            return false;
+        }
+        if (nContentLen != pCurPackage->nContentLen)
+        {
+            return false;
+        }
+        return (memcmp(pData, pCurPackage->pData, header.len) == 0);
+        // if (pCurPackage->nPackageType == ENUM_PACKAGE_TYPE::RTP)
+        // {
 
+        //     return (memcmp(pData, pCurPackage->pData, header.len) == 0);
+        // }
+        // //DCHANNEL消息比较时，只比较前面12个字节，因为DCHANNEL消息的前面12个字节是固定的
+        // {
+        //     return (memcmp(pContent, pCurPackage->pContent, nContentLen) == 0);
+        // }
+
+    }
 public:
-    pcap_pkthdr header;
+    pcap_pkthdr header = { 0 };
     char* pData = nullptr;
     //UNKNOWN:-1; 
-    ENUM_PACKAGE_TYPE nPackageType;
+    ENUM_PACKAGE_TYPE nPackageType = ENUM_PACKAGE_TYPE::UNKNOWN;
     //内容存放在pData中，pData的长度为header.len，以太网数据包的长度为header.len-14，因为有14字节的以太网数据包头
     char* pContent = nullptr;
     uint32_t nContentLen = 0;
+    static inline std::atomic<uint64_t> nPackageCount = 0;
 }PCAP_PACKAGE, * PPCAP_PACKAGE;
 
 
@@ -1351,3 +1384,21 @@ typedef struct _DTMF_BUTTON_INFO
     ENUM_DTMF_BUTTON enumDtmfButton;
 } DTMF_BUTTON_INFO;
 
+
+/*
+* 协议默认端口
+*/
+enum class Protocol_default_port
+{
+    HTTP = 80,      //http服务
+    HTTPS = 443,    //https服务
+    SIP = 5060,     //SIP端口
+    SSDP = 1900,    //SSDP（简单服务发现协议，Simple Service Discovery Protocol）
+    LLMNR = 5355,    //LLMNR（链路本地多播名称解析，Link-Local Multicast Name Resolution）服务
+    mDNS = 5353,
+    NetBIOS_1 = 137,
+    NetBIOS_2 = 138,
+    SCCP = 8500,
+    UNKNOW = 0
+};
+#endif

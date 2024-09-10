@@ -120,9 +120,10 @@ include("${CMAKE_SOURCE_DIR}/cmake/env/FindPcap.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE PCAP)
 
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 message(stat)
 install(TARGETS ${PROJECT_NAME}

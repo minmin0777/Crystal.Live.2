@@ -1,4 +1,5 @@
-﻿/*————————————————————————————————————————————————————————————————————————————————————————
+﻿
+/*————————————————————————————————————————————————————————————————————————————————————————
  * @Author: jason minmin0777@126.com
  * @Date: 2024-07-09 11:27:00
  * @LastEditors: jason minmin0777@126.com
@@ -22,13 +23,10 @@
 
 #pragma once
 
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <mutex>
-#include <atomic>
 #include <CNetDefine.h>
 #include <Common.h>
+#include <thread>
+#include <atomic>
 
 class CCaptureThreadWrapper {
 public:
@@ -72,6 +70,14 @@ public:
      --------------------------------------------------------------------------------------------------------------------------*/
     bool isCapturing();
 
+    /** --------------------------------------------------------------------------------------------------------------------------
+     * @name    void IsRepeatedPacket(const std::shared_ptr<PCAP_PACKAGE>& pPackage) const;
+     * @brief   判断当前包是否是重复的
+     * @param   pCurPackage 当前包
+     * @return  返回 true:重复包 false:不是重复包
+    -------------------------------------------------------------------------------------------------------------------------- */
+    bool IsRepeatedPacket(const std::shared_ptr<PCAP_PACKAGE>& pCurPackage) const;
+
 private:
     std::jthread _t_Capture;     //线程1, 抓包线程
     std::jthread _t_ParseQueue;  //线程2, 数据分析线程
@@ -86,5 +92,6 @@ private:
     std::mutex m_stop_mtx;
     //warning: 抓包队列，存放抓包数据
     Common::ThreadSafeQueue<std::shared_ptr<PCAP_PACKAGE>> m_queue;
-
+    //最后的一个包，记录最后的包的作用是用于重复包的比较
+    std::shared_ptr<PCAP_PACKAGE> m_pLastPackage = nullptr;
 };

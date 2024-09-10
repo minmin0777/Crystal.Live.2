@@ -132,6 +132,10 @@
     "C_Cpp.caseSensitiveFileSupport": "enabled",
     "[cmake]": {
         "editor.defaultFormatter": "cheshirekow.cmake-format"
+    },
+    "C_Cpp.default.compilerPath": "cl.exe",
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
     // ,
     // "editor.defaultFormatter": "esbenp.prettier-vscode",

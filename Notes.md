@@ -21,5 +21,8 @@
 # Crystal.Live.2 日常记录
 
 ## QT6程序进行依赖检测的命令 #2024-05-13#
+#Release
 
 #-"D:/Qt/6.7.0/msvc2019_64/bin/windeployqt6.exe" --qmldir D:\Project_src\Crystal.Live.2\src D:\Project_src\Crystal.Live.2\out\build\x64-release\bin\AppLaunch.exe
+#Debug
+#-"D:/Qt/6.7.0/msvc2019_64/bin/windeployqt6.exe" --qmldir D:\Project_src\Crystal.Live.2\src D:\Project_src\Crystal.Live.2\out\build\x64-debug\bin\RecordService.exe

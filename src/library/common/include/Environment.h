@@ -20,6 +20,19 @@
  ————————————————————————————————————————————————————————————————————————————————————————*/
 
 #pragma once
+
+#pragma region <--过滤警告项-->
+ //@warning 过滤掉不必要的编译警告
+#pragma warning(disable:4100)	//warning C4100: 未引用的形参
+#pragma warning(disable:4244)	//从“int”转换到“char”，可能丢失数据
+#pragma warning(disable:4310)	//类型强制转换截断常量值
+#pragma warning(disable:4267)	//warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+#pragma warning(disable:4996)	//warning C4996: This function or variable may be unsafe.
+#pragma warning(disable:4091)	//warning C4091: This function or variable may be unsafe.
+#pragma warning(disable:4005)	//warning C4005: 宏重定义
+#pragma endregion 
+
+
 #define WIN32_LEAN_AND_MEAN
  // #define _CRT_SECURE_NO_WARNINGS
 #if defined(_WIN_32) || defined(_WIN64)

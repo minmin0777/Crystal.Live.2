@@ -37,14 +37,22 @@ namespace Common
 
     public:
         /** --------------------------------------------------------------------------------------------------------------------------
-         * @name  std::string GetWorkerDirectory(bool bEndWithSlash = true) noexcept
-         * @brief 获取工作目录
-         * @param bEndWithSlash 是否以斜杠结尾
-         * @return 工作目录
+         * @name    std::string GetWorkingDirectory(bool bEndWithSlash = true, bool bUseLinuxSlash = true) noexcept
+         * @brief   获取工作目录
+         * @param   bEndWithSlash  是否以斜杠结尾
+         * @param   bUseLinuxSlash 是否使用Linux斜杠
+         * @return  工作目录
          --------------------------------------------------------------------------------------------------------------------------*/
-        static std::string GetWorkerDirectory(bool bEndWithSlash = true) noexcept;
+        static std::string GetWorkingDirectory(bool bEndWithSlash = true, bool bUseLinuxSlash = true) noexcept;
 
-
+        /** --------------------------------------------------------------------------------------------------------------------------
+         * @name    static std::string GetAppPath(const std::string& appName, bool bUseLinuxSlash = true) noexcept;
+         * @brief   获取目标App的完整路径
+         * @param   appName 目标App名称
+         * @param   bUseLinuxSlash 是否使用Linux斜杠
+         * @return  目标App的完整路径
+         --------------------------------------------------------------------------------------------------------------------------*/
+        static std::string GetAppPath(const std::string& appName, bool bUseLinuxSlash = true) noexcept;
         /** --------------------------------------------------------------------------------------------------------------------------
          * @name  std::string GetMACAddress(const char* MAC) noexcept
          * @brief 获取MAC地址
@@ -87,6 +95,16 @@ namespace Common
          * @return 十六进制字符串
          --------------------------------------------------------------------------------------------------------------------------*/
         static std::string toHex(const char* data, size_t length);
+
+        /** --------------------------------------------------------------------------------------------------------------------------
+         * @brief 二进制比较
+         * @param data1
+         * @param length1
+         * @param data2
+         * @param length2
+         * @return 是否相等
+         --------------------------------------------------------------------------------------------------------------------------*/
+        static bool BinaryCompare(const char* src, size_t src_len, const char* target, size_t target_len) noexcept;
 
     };
 

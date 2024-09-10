@@ -1,13 +1,14 @@
-﻿/*————————————————————————————————————————————————————————————————————————————————————————
+﻿
+/*————————————————————————————————————————————————————————————————————————————————————————
  * @Author: jason minmin0777@126.com
  * @Date: 2024-08-07 16:15:12
  * @LastEditors: jason minmin0777@126.com
- * @LastEditTime: 2024-08-09 09:58:17
+ * @LastEditTime: 2024-08-08 17:16:12
  * @FilePath: \Crystal.Live.2\src\library\Config\include\ConfigInfo.h
- * @Description:
+ * @Description: 配置信息类
  * @
  * @#|----------------------------------------------------------------------------|
- * @#|  ClassName         : Description                                           |
+ * @#|  Class Name  : CConfigInfo |     配置信息类                                |
  * @#|----------------------------------------------------------------------------|
  * @#|  Change History :                                                          |
  * @#|  <Date>     | <Version> | <Author>       | <Description>                   |
@@ -18,26 +19,6 @@
  * @#|----------------------------------------------------------------------------|
  * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  ————————————————————————————————————————————————————————————————————————————————————————*/
- /*————————————————————————————————————————————————————————————————————————————————————————
-  * @Author: jason minmin0777@126.com
-  * @Date: 2024-08-07 16:15:12
-  * @LastEditors: jason minmin0777@126.com
-  * @LastEditTime: 2024-08-08 17:16:12
-  * @FilePath: \Crystal.Live.2\src\library\Config\include\ConfigInfo.h
-  * @Description: 配置信息类
-  * @
-  * @#|----------------------------------------------------------------------------|
-  * @#|  Class Name  : CConfigInfo |     配置信息类                                |
-  * @#|----------------------------------------------------------------------------|
-  * @#|  Change History :                                                          |
-  * @#|  <Date>     | <Version> | <Author>       | <Description>                   |
-  * @#|----------------------------------------------------------------------------|
-  * @#|  2024/05/02 | 0.0.0.1   | jason.chen     | Create file                     |
-  * @#|----------------------------------------------------------------------------|
-  * @#|                                                                            |
-  * @#|----------------------------------------------------------------------------|
-  * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
-  ————————————————————————————————————————————————————————————————————————————————————————*/
 
 
 #pragma once
@@ -57,6 +38,9 @@
 using boost::property_tree::ptree;
 using boost::property_tree::read_json;
 using boost::property_tree::write_json;
+#include <map>
+#include <CNetDefine.h>
+
 
 /**
  * @class    CConfigInfo
@@ -69,8 +53,8 @@ class CConfigInfo
 public:
     CConfigInfo();
     virtual ~CConfigInfo();
-    CConfigInfo(const CConfigInfo&) = delete;
-    CConfigInfo& operator=(const CConfigInfo&) = delete;
+    // CConfigInfo(const CConfigInfo&) = delete;
+    // CConfigInfo& operator=(const CConfigInfo&) = delete;
 
     friend class boost::serialization::access; // 允许序列化访问
 
@@ -82,7 +66,7 @@ public:
      * @warning C++11 标准保证了当一个线程首次访问局部静态变量时，其初始化将是线程安全的
      */
     static CConfigInfo& Get() {
-         // 局部静态变量
+        // 局部静态变量
         static CConfigInfo instance;
         return instance;
     }
@@ -114,6 +98,7 @@ protected:
     std::string m_strLogPath;
     std::string m_strLogName;
     std::string m_strLogSuffix;
-
-
+public:
+    std::map<std::string, std::shared_ptr<NetworkAdapterInfo>> m_mapNetworkAdapters;
+    std::string m_strfilter;
 };

@@ -19,24 +19,39 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 # 设置 CMAKE_POSITION_INDEPENDENT_CODE 属性来启用 -fPIC
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-#设置版本信息
-set(version 3.4.1)
 
+if(MSVC)
+  add_compile_options(/EHsc /UTF-8)
+endif()
+
+
+#设置版本信息
+set (Product_VERSION_MAJOR 1)
+set (Product_VERSION_MINOR 0)
+set (Product_VERSION_PATCH 1)
+set (Product_VERSION_BUILD 1)
+
+set (version "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
+set(description "Common is a library that provides common functions for the Crystal.Live.2 project.")
 
 #设定当前的项目为 Cryctal.Live.2
-project(Common VERSION ${version} LANGUAGES CXX)
+project(Common VERSION ${version} LANGUAGES CXX DESCRIPTION "${description}")
 
+# # 添加定义，使用Boost.Log动态库
+# add_definitions(-DBOOST_LOG_DYN_LINK)
 
 remove_definitions(/showIncludes)
+#warning:Common库必须为静态库，因为日志库需要在每一个模块中独立运行
 add_library(${PROJECT_NAME} STATIC)
 
-file(GLOB SOURCES "src/*.cpp")
-file(GLOB HEADERS "include/*.h")
 
 set(CMAKE_CXX_FLAGS "/EHsc ${CMAKE_CXX_FLAGS}")
 
+file(GLOB SOURCES "src/*.cpp")
+file(GLOB HEADERS "include/*.h")
 target_sources(${PROJECT_NAME}
   PRIVATE ${SOURCES} ${HEADERS}
+  res/${PROJECT_NAME}.rc
  )
 # message(STATUS "Core.Common--头文件目录:${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -76,10 +91,13 @@ generate_export_header(${PROJECT_NAME}
 #    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 # )
 
-
-
-
-
+#VersionManage.cmake 文件中包含了版本信息的配置,windows环境下并会设置rc文件
+include("${CMAKE_SOURCE_DIR}/cmake/version/VersionManage.cmake")
+set_version_infomation(
+  ${PROJECT_NAME} 
+  ${version}
+  ${description}
+  )
 
 #设置Core.Common的版本信息
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${version})
@@ -107,6 +125,10 @@ write_basic_package_version_file(
 )
 
 
+# 添加WIN32_LEAN_AND_MEAN宏定义,防止windows.h与winsock2.h冲突
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost_lib)
 
@@ -118,10 +140,10 @@ endif()
 
 
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
-
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}
@@ -190,6 +212,23 @@ else()
     # 在其他情况下执行的操作
     
 endif()
+
+include(${CMAKE_SOURCE_DIR}/cmake/env/build_info.cmake)
+set(LOG_Content "---")
+get_build_infomation(${LOG_Content})
+
+foreach(log_text ${retValue})
+  add_custom_command(TARGET ${PROJECT_NAME}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "${log_text}" >> ${CMAKE_BINARY_DIR}/log.md
+  COMMENT "Write log"
+  DEPENDS ALWAYS
+  )
+
+  message(STATUS "LOG:${log_text}")
+endforeach()
+
+
 
 # copy_pdb_file(${PROJECT_NAME} ${version})
 message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")

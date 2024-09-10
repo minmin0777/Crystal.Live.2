@@ -23,10 +23,10 @@ if (MSVC)
 endif()
 
 #查找QT6的库
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Svg Network qml LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Svg Network qml LinguistTools )
 # find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg Network LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Svg Network LinguistTools Core5Compat)
 #导入Qt相关依赖包
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Quick Svg Network)
 

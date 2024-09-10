@@ -29,32 +29,99 @@
 #include <sstream>
 #include <iomanip>
 #include <boost/algorithm/hex.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/dll/shared_library.hpp>
 namespace Common
 {
 
 
 
     /** --------------------------------------------------------------------------------------------------------------------------
-        * @name  std::string GetWorkerDirectory(bool bEndWithSlash = true) noexcept
-        * @brief 获取工作目录
-        * @param bEndWithSlash 是否以斜杠结尾
-        * @return 工作目录
-        --------------------------------------------------------------------------------------------------------------------------*/
-    std::string Utility::GetWorkerDirectory(bool bEndWithSlash) noexcept
+    * @name  std::string Utility::GetWorkingDirectory(bool bEndWithSlash, bool bUseLinuxSlash)
+    * @brief 获取工作目录
+    * @param bEndWithSlash 是否以斜杠结尾
+    * @return 工作目录
+    --------------------------------------------------------------------------------------------------------------------------*/
+    std::string Utility::GetWorkingDirectory(bool bEndWithSlash, bool bUseLinuxSlash) noexcept
     {
 
-        boost::filesystem::path exePath = boost::filesystem::initial_path();
-        std::string strPath = exePath.string();
-        if (bEndWithSlash)
+        boost::filesystem::path exePath = boost::dll::program_location();
+        if (exePath.empty())
+        {
+            return "";
+        }
+        boost::filesystem::path exeDir = exePath.parent_path();
+        std::string strPath = exeDir.string();
+        if (boost::filesystem::is_directory(exeDir))
+        {
+            if (strPath.back() != '/' && strPath.back() != '\\')
+            {
+                if (bEndWithSlash)  strPath += "/";
+            }
+
+        }
+        else
         {
             std::string::size_type pos = strPath.find_last_of("\\/");
             if (pos != std::string::npos)
             {
                 strPath = strPath.substr(0, pos);
             }
-            strPath += "/";
+            if (bEndWithSlash)  strPath += "/";
         }
+        if (bUseLinuxSlash)
+            strPath = boost::replace_all_copy(strPath, "\\", "/");
+        else
+            strPath = boost::replace_all_copy(strPath, "/", "\\");
+
         return strPath;
+    }
+    /** --------------------------------------------------------------------------------------------------------------------------
+     * @name    static std::string GetAppPath(const std::string& appName, bool bUseLinuxSlash = true) noexcept;
+     * @brief   获取目标App的完整路径
+     * @param   appName 目标App名称
+     * @param   bUseLinuxSlash 是否使用Linux斜杠
+     * @return  目标App的完整路径
+     --------------------------------------------------------------------------------------------------------------------------*/
+    std::string Utility::GetAppPath(const std::string& appName, bool bUseLinuxSlash) noexcept
+    {
+        boost::filesystem::path appPath;
+
+#ifdef _WIN32
+        char pathBuffer[MAX_PATH] = { 0 };
+        std::string strAppName[2] = { appName + ".dll" , appName + ".exe" }; ;
+        HMODULE hModule = nullptr;
+        for (size_t n = 0;n < 2;n++)
+        {
+            hModule = GetModuleHandleA(strAppName[n].c_str());
+            if (hModule != nullptr)
+            {
+                if (GetModuleFileNameA(hModule, pathBuffer, MAX_PATH)) {
+                    appPath = boost::filesystem::path(pathBuffer);
+                    break;
+                }
+            }
+
+
+        }
+
+#else
+        char pathBuffer[MAX_PATH];
+        ssize_t count = readlink("/proc/self/exe", pathBuffer, PATH_MAX);
+        if (count != -1) {
+            appPath = boost::filesystem::path(std::string(pathBuffer, count));
+        }
+#endif
+
+        // 如果需要，将路径分隔符替换为Linux风格
+        if (bUseLinuxSlash) {
+            return appPath.generic_string();
+        }
+        else {
+            return appPath.string();
+        }
     }
 
     /*------------------------------------------------------------------------------------------------------------------------------*/
@@ -127,9 +194,14 @@ namespace Common
         vtRet.push_back(input.substr(start));
         return vtRet.size();
     }
-    /*------------------------------------------------------------------------------------------------------------------------------*/
 
-
+    /** --------------------------------------------------------------------------------------------------------------------------
+    * 转换字节到十六进制字符串
+    * @name  toHex
+    * @param data 字节数组
+    * @param length 字节数组长度
+    * @return 十六进制字符串
+    --------------------------------------------------------------------------------------------------------------------------*/
     std::string Utility::toHex(const char* data, size_t length)
     {
         std::string result;
@@ -138,6 +210,20 @@ namespace Common
         std::transform(result.begin(), result.end(), result.begin(),
             [](unsigned char c) { return std::tolower(c); });
         return result;
+    }
+    /** --------------------------------------------------------------------------------------------------------------------------
+     * @brief 二进制比较
+     * @param data1
+     * @param length1
+     * @param data2
+     * @param length2
+     * @return 是否相等
+    --------------------------------------------------------------------------------------------------------------------------*/
+    bool Utility::BinaryCompare(const char* src, size_t src_len, const char* target, size_t target_len)  noexcept
+    {
+        if (src_len != target_len)
+            return false;
+        return memcmp(src, target, src_len) == 0;
     }
 
 }

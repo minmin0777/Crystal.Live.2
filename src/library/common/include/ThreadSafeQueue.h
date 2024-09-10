@@ -30,7 +30,7 @@ namespace Common
         // 入队
         void Enqueue(const T& value) {
             std::lock_guard<std::mutex> lock(mutex_);
-            queue_.push(value);
+            queue_.push_back(value);
             condition_.notify_one(); // 通知一个等待的线程
         }
 
@@ -41,16 +41,25 @@ namespace Common
                 return false;
             }
             value = queue_.front();
-            queue_.pop();
+            queue_.pop_front();
             return true;
         }
 
         // 出队，如果队列为空则阻塞等待
-        void WaitAndDequeue(T& value) {
+        bool WaitAndDequeue(T& value, int timeout = 3) {
             std::unique_lock<std::mutex> lock(mutex_);
-            condition_.wait(lock, [this] { return !queue_.empty(); }); // 等待直到队列非空
+            bool isTimeout = condition_.wait_for(lock, std::chrono::seconds(timeout), [this] {
+                return !queue_.empty();
+                });
+
+            if (isTimeout == false) // 超时
+            {
+                queue_.shrink_to_fit();//超时时(空闲时)，可以用来收缩内存占用
+                return false;
+            }
             value = queue_.front();
-            queue_.pop();
+            queue_.pop_front();
+            return true;
         }
 
         // 获取队列大小
@@ -65,9 +74,14 @@ namespace Common
             return queue_.empty();
         }
 
+        void shrink_to_fit() {
+
+            std::lock_guard<std::mutex> lock(mutex_);
+            queue_.shrink_to_fit();
+        }
     private:
         mutable std::mutex mutex_;
-        std::queue<T> queue_;
+        std::deque<T> queue_;
         std::condition_variable condition_;
     };
 }

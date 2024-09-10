@@ -1,11 +1,11 @@
 ﻿
 message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")
-message(STATUS "[PCAP信息] ")
+message(STATUS "[PCAP信息]")
 
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 
     #windows平台
-    set(PCAP_Include_Path "${CMAKE_SOURCE_DIR}/3rd-party/Windows/PcapSDK/Include")
+    set(PCAP_Include_Path "${CMAKE_SOURCE_DIR}/3rd-party/Windows/PcapSDK/include")
 
     if(CMAKE_CL_64)
         set(CURRENT_PLATFORM "x64")

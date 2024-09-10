@@ -22,40 +22,34 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #设置版本信息
 
-set(version 3.4.1)
-
-set (PROJECT_NAME "Config")
-
-option(BUILD_SHARED "build shared library" ON)
-#option(BUILD_STATIC "build static library" ON)
-
-
+#设置版本信息
 set (Product_VERSION_MAJOR 1)
 set (Product_VERSION_MINOR 0)
 set (Product_VERSION_PATCH 1)
 set (Product_VERSION_BUILD 1)
 
+set (version "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
 
-set(_CompanyName "CIS")
-set(_ProductName "AppLaunch")
-set(_FileVersion "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
-set(_ProductVersion "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
-set(_FILEVERSION "${Product_VERSION_MAJOR}, ${Product_VERSION_MINOR}, ${Product_VERSION_PATCH}, ${Product_VERSION_BUILD}")
-set(_PRODUCTVERSION "${Product_VERSION_MAJOR}, ${Product_VERSION_MINOR}, ${Product_VERSION_PATCH}, ${Product_VERSION_BUILD}")
-set(_OriginalFilename "${PROJECT_NAME}.dll")
-set(_InternalName "${PROJECT_NAME}")
-set(_FileDescription "${PROJECT_NAME}")
-set(_LegalCopyright "")
+set (PROJECT_NAME "Config")
+set(description "Config is a library that provides common functions for the Crystal.Live.2 project.")
 
 
+option(BUILD_SHARED "build shared library" ON)
+#option(BUILD_STATIC "build static library" ON)
 
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/res/${PROJECT_NAME}.rc.in ${CMAKE_CURRENT_SOURCE_DIR}/res/${PROJECT_NAME}.rc @ONLY)
-message(STATUS "配置资源文件: res/Config.rc")
+#VersionManage.cmake 文件中包含了版本信息的配置,windows环境下并会设置rc文件
+include("${CMAKE_SOURCE_DIR}/cmake/version/VersionManage.cmake")
+
+set_version_infomation(
+  ${PROJECT_NAME} 
+  ${version}
+  ${description}
+  )
 
 #设定当前的项目为 Cryctal.Live.2
-project(${PROJECT_NAME} VERSION ${version} LANGUAGES CXX)
+project(${PROJECT_NAME} VERSION ${version} LANGUAGES CXX DESCRIPTION "${description}")
 
-
+qt_standard_project_setup()
 remove_definitions(/showIncludes)
 
 
@@ -66,14 +60,41 @@ file(GLOB HEADERS "include/*.h")
 set(CMAKE_CXX_FLAGS "/EHsc ${CMAKE_CXX_FLAGS}")
 
 if(BUILD_SHARED)
-   add_library(${PROJECT_NAME} SHARED)
+  qt_add_library(${PROJECT_NAME} SHARED)
 else()
-  add_library(${PROJECT_NAME} STATIC)
+  qt_add_library(${PROJECT_NAME} STATIC)
 endif()
+
+
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Protobuf)
+# find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core )
+
+# 添加WIN32_LEAN_AND_MEAN宏定义,防止windows.h与winsock2.h冲突
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt6::Protobuf
+    #fluentuiplugin
+)
+
+find_package(sensors CONFIG)
+
+if(sensors_FOUND)
+  message(STATUS "sensors found")
+else()
+  message(STATUS "sensors not found")
+endif()
+#target_link_libraries(${PROJECT_NAME} PRIVATE MyProtoLib::MyProtoLib Qt6::Protobuf)
+
+
 
 
 target_sources(${PROJECT_NAME}
   PRIVATE ${SOURCES} ${HEADERS} res/${PROJECT_NAME}.rc
+  
  )
  # warning: 预编译头文件
  target_precompile_headers(${PROJECT_NAME} PRIVATE ./include/pch.h)
@@ -116,8 +137,7 @@ generate_export_header(${PROJECT_NAME}
 
 
 
-
-
+#target_link_libraries(${PROJECT_NAME} PRIVATE protobuf_sensors)
 
 #设置Core.${PROJECT_NAME}的版本信息
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${version})
@@ -149,7 +169,16 @@ include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
 
+
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost_lib)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/library/NetCapture/include)
+if (MSVC)
+  target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rd-party/Windows/PcapSDK/include)
+else()
+  target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rd-party/Linux/libpcap-1.10.4/pcap)
+endif()
+message(STATUS "NetCapture包含目录:${CMAKE_SOURCE_DIR}/3rd-party/PcapSDK/include")
 
 
 #windows环境下，链接Dbghelp.lib库
@@ -162,9 +191,27 @@ message(STATUS "添加预编译头文件 -D${PROJECT_NAME}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
 
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
+qt_add_protobuf(sensors
+    GENERATE_PACKAGE_SUBFOLDERS
+    PROTO_FILES
+        ./sensors.proto
+    OUTPUT_HEADERS
+        public_headers
+    OUTPUT_TARGETS
+        generated_targets
+    output_directory
+      ${CMAKE_INSTALL_BINDIR}/sensors
+    GENERATE_CPP
+
+)
+
+
 
 
 install(TARGETS ${PROJECT_NAME}
@@ -176,36 +223,47 @@ install(TARGETS ${PROJECT_NAME}
 
 )
 
+# message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+
 
 
 file(INSTALL ./include/${PROJECT_NAME}.h DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 file(INSTALL ./include/${PROJECT_NAME}.Export.h DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 
 
+
 # 获取所有头文件
 file(GLOB HEADER_FILES "./include/*.h" "./include/*.hpp")
+file(GLOB CONFIG_FILES "./Configure/*.*" "./Configure/*.*")
 # 逐个拷贝文件
 foreach(HEADER_FILE ${HEADER_FILES})
   file(INSTALL ${HEADER_FILE} DESTINATION ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME})
 endforeach()
 
+foreach(CONFIG_FILE ${CONFIG_FILES})
+  file(INSTALL ${CONFIG_FILE} DESTINATION ${CMAKE_BINARY_DIR}/bin/Configure)
+endforeach()
 
-message(STATUS "Core.${PROJECT_NAME}--头文件目录:${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}")
+
+
 
 install(FILES ./include/${PROJECT_NAME}.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 install(FILES ./include/${PROJECT_NAME}.Export.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
 
 install(DIRECTORY ./include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+install(DIRECTORY ./Configure DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+message(STATUS "Config.${PROJECT_NAME}--配置文件目录:${CMAKE_BINARY_DIR}/Configure")
+message(STATUS "Config.${PROJECT_NAME}--配置文件目录:${CMAKE_INSTALL_BINDIR}/Configure")
 
-export(EXPORT ${PROJECT_NAME}
+export(EXPORT ${PROJECT_NAME} 
        FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-Targets.cmake"
        NAMESPACE Core::
 )
 
 export(EXPORT ${PROJECT_NAME}
-       FILE "${CMAKE_BINARY_DIR}/lib/cmake/${PROJECT_NAME}-Config.cmake"
+       FILE "${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/${PROJECT_NAME}-Config.cmake"
        NAMESPACE Core::
 )
 
@@ -235,5 +293,21 @@ else()
     
 endif()
 
-# copy_pdb_file(${PROJECT_NAME} ${version})
+include(${CMAKE_SOURCE_DIR}/cmake/env/build_info.cmake)
+set(LOG_Content "---")
+get_build_infomation(${LOG_Content})
+
+foreach(log_text ${retValue})
+  add_custom_command(TARGET ${PROJECT_NAME}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "${log_text}" >> ${CMAKE_BINARY_DIR}/log.md
+  COMMENT "Write log"
+  DEPENDS ALWAYS
+  )
+
+  message(STATUS "LOG:${log_text}")
+endforeach()
+
+
+copy_pdb_file(${PROJECT_NAME} ${version})
 message(STATUS "————————————————————————————————————————————————————————————————————————————————————————")

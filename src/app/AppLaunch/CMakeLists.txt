@@ -1,13 +1,16 @@
-
-
 cmake_minimum_required(VERSION 3.20)
 
 #设置版本信息
-set(version 3.4.1)
+set (Product_VERSION_MAJOR 1)
+set (Product_VERSION_MINOR 0)
+set (Product_VERSION_PATCH 2)
+set (Product_VERSION_BUILD 2)
+set (version "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
+#设定当前的项目为 Cryctal.Live.2
+set(description "AppLaunch is a executeable program  for the Crystal.Live.2 project.")
 # include(FetchContent)
 #设定当前的项目为 Cryctal.Live.2
-project(AppLaunch VERSION ${version} LANGUAGES CXX)
-#设定当前的项目为 Cryctal.Live.2
+project(AppLaunch VERSION ${version} LANGUAGES CXX DESCRIPTION "${description}")
 
 #设定C++标准
 set(CMAKE_CXX_STANDARD 20)
@@ -28,30 +31,19 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS LinguistTools)
 
+#加入预编译头文件支持
+include("${CMAKE_SOURCE_DIR}/cmake/AddPrecompileHeader.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/CreatePDB.cmake")
+
+#VersionManage.cmake 文件中包含了版本信息的配置,windows环境下并会设置rc文件
+include("${CMAKE_SOURCE_DIR}/cmake/version/VersionManage.cmake")
+set_version_infomation(
+  ${PROJECT_NAME} 
+  ${version}
+  ${description}
+  )
 
 
-
-set (Product_VERSION_MAJOR 1)
-set (Product_VERSION_MINOR 0)
-set (Product_VERSION_PATCH 1)
-set (Product_VERSION_BUILD 1)
-
-
-set(_CompanyName "CIS")
-set(_ProductName "AppLaunch")
-set(_FileVersion "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
-set(_ProductVersion "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
-set(_FILEVERSION "${Product_VERSION_MAJOR}, ${Product_VERSION_MINOR}, ${Product_VERSION_PATCH}, ${Product_VERSION_BUILD}")
-set(_PRODUCTVERSION "${Product_VERSION_MAJOR}, ${Product_VERSION_MINOR}, ${Product_VERSION_PATCH}, ${Product_VERSION_BUILD}")
-set(_OriginalFilename "${PROJECT_NAME}.exe")
-set(_InternalName "${PROJECT_NAME}")
-set(_FileDescription "${PROJECT_NAME}")
-set(_LegalCopyright "")
-
-
-
-configure_file( ${CMAKE_SOURCE_DIR}/src/app/${PROJECT_NAME}/res/${PROJECT_NAME}.rc.in ${CMAKE_SOURCE_DIR}/src/app/${PROJECT_NAME}/res/${PROJECT_NAME}.rc @ONLY)
-message(STATUS "配置资源文件: res/AppLaunch.rc")
 
 # include(${CMAKE_SOURCE_DIR}/cmake/env/FindQT6.cmake)
 #set(DOWNLOAD_EXTRACT_TIMESTAMP true)
@@ -88,7 +80,10 @@ remove_definitions(/showIncludes)
 find_program(QT_LUPDATE NAMES lupdate)
 find_program(QT_LRELEASE NAMES lrelease)
 
-
+# 添加WIN32_LEAN_AND_MEAN宏定义,防止windows.h与winsock2.h冲突
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
 
 add_dependencies(${PROJECT_NAME} Script-UpdateTranslations_${PROJECT_NAME})
 add_dependencies(${PROJECT_NAME} Common)
@@ -111,18 +106,16 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/i18n DESTINATION ${CMAKE_INSTALL_BINDI
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost_lib)
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
-
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 # message(STATUS "config目录:  ${CMAKE_SOURCE_DIR}/cmake/env")
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/cmake/env)
 
 
-#加入预编译头文件支持
-include("${CMAKE_SOURCE_DIR}/cmake/AddPrecompileHeader.cmake")
-include("${CMAKE_SOURCE_DIR}/cmake/CreatePDB.cmake")
+
 
 
 set_target_properties(${PROJECT_NAME}
@@ -225,6 +218,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Core::NetCapture)
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
 
+
+include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::RecordEngine)
 
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindFFMPEG.cmake")
 # target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)

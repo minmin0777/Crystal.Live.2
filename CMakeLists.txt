@@ -1,4 +1,5 @@
 
+
 # 防止在源代码目录中进行构建。可以避免在源代码目录中生成的构建文件污染源代码。
 if(" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
   message(FATAL_ERROR "FATAL: In-source builds are not allowed.
@@ -54,13 +55,6 @@ foreach(module_path ${CMAKE_MODULE_PATH})
 endforeach()
 
 
-
-
-
-
-
-
-
 #设置cmake的policy规则，使其在不同平台也具有一致性
 include (./cmake/env/policy.cmake)
 
@@ -68,8 +62,11 @@ include (./cmake/env/policy.cmake)
 option(ENABLE_PIC "Generate position independent code (necessary for shared libraries)" TRUE)
 set(CMAKE_POSITION_INDEPENDENT_CODE ${ENABLE_PIC})
 
+#设置版本信息
+set(version 3.4.1)
+
 #设定当前的项目为 Cryctal.Live.2
-project(Crystal.live2 VERSION 1.0)
+project(Crystal.live2 VERSION ${version} LANGUAGES CXX)
 #查找boost库
 include(./cmake/env/FindBoost.cmake)
 #查找QT库
@@ -83,7 +80,9 @@ include(./cmake/env/Findexosip.cmake)
 
 include(./cmake/CreatePDB.cmake)
 
+find_package(Qt6 REQUIRED COMPONENTS  Protobuf )
 
+qt_standard_project_setup()
 
 #添加自定义的CMake选项，用于控制是否编译第三方库，开启时会同时编译第三方库，关闭时只编译项目本身
 option(ENABLE_COMPILE_THIRD_PARTY_LIBRARY "Enable compile third-party Library" OFF)
@@ -98,10 +97,11 @@ endif()
 add_subdirectory(./src)
 
 
+find_package(Protobuf REQUIRED PATHS "D:/Library/protobuf-27.3" )
 # CPack 配置
 set(CPACK_PACKAGE_NAME "Crystal.live2")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Crystal.live2")
 
-set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_VERSION "${version}")
 set(CPACK_GENERATOR "ZIP") # 选择你想要的包生成器
 include(CPack)

@@ -37,7 +37,7 @@ namespace Common
 
   Common_EXPORT bool SetEnv();
 
-  Common_EXPORT bool InitLog(const std::string& channel);
+  Common_EXPORT bool InitLog(const LogInfo& logInfo);
 
 
 } // namespace Common

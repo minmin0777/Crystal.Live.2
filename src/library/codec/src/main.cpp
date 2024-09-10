@@ -181,17 +181,26 @@ namespace Codec
 {
   std::string GetVersion()
   {
+    std::string strVer = "1.9.3";
+    return strVer;
+  }
 
+  bool Init()
+  {
     Common::SetEnv();
-    Common::InitLog(LOG_PROJECT_NAME);
-    //init_logging();
+    LogInfo logInfo;
+    logInfo.Channel = LOG_PROJECT_NAME;
+    logInfo.Version = GetVersion();
+    logInfo.Location = Common::Utility::GetAppPath(logInfo.Channel);
+
+    Common::InitLog(logInfo);
 
     srtp_err_status_t status = srtp_init();
     LOG(INFO) << L"SRTP初始化成功" << std::endl;
-    std::string strVer = "1.9.3";
     const AVCodec* mp3_codec = avcodec_find_encoder(AV_CODEC_ID_MP3);
 
-
-    return strVer;
+    return true;
   }
+
+
 }

@@ -1,4 +1,5 @@
-﻿/*————————————————————————————————————————————————————————————————————————————————————————
+﻿
+/*————————————————————————————————————————————————————————————————————————————————————————
  * @Author: jason minmin0777@126.com
  * @Date: 2024-05-27 09:19:57
  * @LastEditors: jason minmin0777@126.com
@@ -20,6 +21,7 @@
  ————————————————————————————————————————————————————————————————————————————————————————*/
 #include <Audio.h> 
 #include <csignal>
+#include "../res/version.h"
  // 定义一个信号处理函数
 void signalHandler(int signal)
 {
@@ -32,7 +34,7 @@ void signalHandler(int signal)
     // LOG(fatal) << OUTPUT_LINE << std::endl;
     exit(signal);
 }
-static inline std::string g_Version = "1.0.0.1";
+
 namespace Audio
 {
     std::string GetVersion()
@@ -40,7 +42,6 @@ namespace Audio
         // 注册信号处理函数
         std::signal(SIGSEGV, signalHandler);
         std::signal(SIGABRT, signalHandler);
-
         return g_Version;
     }
 }

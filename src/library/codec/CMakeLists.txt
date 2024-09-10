@@ -21,9 +21,16 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
 #设置版本信息
-set(version 3.4.1)
+set (Product_VERSION_MAJOR 1)
+set (Product_VERSION_MINOR 0)
+set (Product_VERSION_PATCH 1)
+set (Product_VERSION_BUILD 1)
+
+set (version "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
+set (description "Codec库用于处理音视频编码的相关操作。")
+
 #设定当前的项目为 Cryctal.Live.2
-project(Codec VERSION ${version} LANGUAGES CXX)
+project(Codec VERSION ${version} LANGUAGES CXX DESCRIPTION "${description}")
 
 # add_dependencies(${PROJECT_NAME} Common)
 
@@ -37,10 +44,12 @@ add_library(${PROJECT_NAME} SHARED "")
 add_dependencies(${PROJECT_NAME} Core::Common)
 target_sources(${PROJECT_NAME}
   PRIVATE ${SOURCES} ${HEADERS}
-
+  res/${PROJECT_NAME}.rc
  )
 # message(STATUS "Core.Codec--头文件目录:${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_NAME}")
+
+
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
@@ -92,9 +101,14 @@ generate_export_header(${PROJECT_NAME}
 
 
 
-
-
-
+#VersionManage.cmake 文件中包含了版本信息的配置,windows环境下并会设置rc文件
+include("${CMAKE_SOURCE_DIR}/cmake/version/VersionManage.cmake")
+set_version_infomation(
+  ${PROJECT_NAME} 
+  ${version}
+  ${description}
+  )
+# incl
 #设置Core.Codec的版本信息
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${version})
 set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION 3)
@@ -123,6 +137,10 @@ write_basic_package_version_file(
 # 定义宏以帮助控制符号的导出/导入
 # target_compile_definitions(Codec PRIVATE CODEC_EXPORTS)
 
+# 添加WIN32_LEAN_AND_MEAN宏定义,防止windows.h与winsock2.h冲突
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost_lib)
 
@@ -130,10 +148,10 @@ include("${CMAKE_SOURCE_DIR}/cmake/env/FindLibSRTP.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE libSRTP::srtp2)
 
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
-
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 
 set(CMAKE_CXX_FLAGS "/EHsc ${CMAKE_CXX_FLAGS}")
@@ -192,6 +210,22 @@ else()
     # 在其他情况下执行的操作
     
 endif()
+
+include(${CMAKE_SOURCE_DIR}/cmake/env/build_info.cmake)
+set(LOG_Content "---")
+get_build_infomation(${LOG_Content})
+
+foreach(log_text ${retValue})
+  add_custom_command(TARGET ${PROJECT_NAME}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "${log_text}" >> ${CMAKE_BINARY_DIR}/log.md
+  COMMENT "Write log"
+  DEPENDS ALWAYS
+  )
+
+  message(STATUS "LOG:${log_text}")
+endforeach()
+
 
 copy_pdb_file(${PROJECT_NAME} ${version})
 

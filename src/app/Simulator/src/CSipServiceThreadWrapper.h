@@ -6,9 +6,22 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
-#ifndef _WINSOCK2API_
-#include <winsock2.h>
+#if defined(_WIN32) || defined(_WIN64)
+    #ifndef _WINSOCK2API_
+        #include <winsock2.h>
+    #endif
+#else
+    #include <unistd.h>
+    #include <dirent.h>     // for mkdir,rmdir,chdir,getcwd
+    #include <unistd.h>
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <sys/ioctl.h>
+    #include <netinet/in.h>
+    #include <net/if.h>
+    #include <arpa/inet.h>
 #endif
+
 #include "hv/hloop.h"
 #include "hv/hsocket.h"
 #include <Common.h>

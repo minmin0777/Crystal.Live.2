@@ -53,6 +53,12 @@
 #  define BOOST_NO_EXCEPTIONS
 #endif
 
+#if defined(_WIN_32) || defined(_WIN64)
+#undef TRACE
+#undef ERROR
+#undef DEBUG
+#endif
+
 
 #include <filesystem>
 #include <boost/log/sources/severity_channel_logger.hpp>
@@ -81,10 +87,8 @@ namespace expr = boost::log::expressions;
 namespace src = boost::log::sources;
 
 using namespace std::literals::chrono_literals;
-//typedef src::severity_logger_mt<severity_level> service_logger_mt;
 
-// #define OUTPUT_LINE "-----------------------------------------------------------------------\n"
-/**
+/** --------------------------------------------------------------------------------------------------------------------------
  * @brief 日志级别定义
  * * TRACE: 跟踪信息
  * * DEBUG: 调试信息
@@ -95,12 +99,7 @@ using namespace std::literals::chrono_literals;
  * * HEAD:  头信息
  * @note 日志级别从低到高排列
  *
- */
-#if defined(_WIN_32) || defined(_WIN64)
-#undef TRACE
-#undef ERROR
-#endif
-
+ --------------------------------------------------------------------------------------------------------------------------*/
 
 enum severity_level
 {
@@ -155,15 +154,6 @@ public:
 
 
 
-template<typename ValueType>
-ValueType set_get_attrib(const char* name, ValueType value)
-{
-
-  auto attr = boost::log::attribute_cast<boost::log::attributes::mutable_constant<ValueType>>(boost::log::core::get()->get_global_attributes()[name]);
-  attr.set(value);
-  return attr.get();
-}
-
 
 std::string path_to_filename(std::string path);
 
@@ -208,14 +198,28 @@ std::string path_to_filename(std::string path);
       if(condition)                  \
           LOG(severity)
 
+/** --------------------------------------------------------------------------------------------------------------------------
+ * @brief     日志信息类
+ * @Warning:  (初始化日志库的重要结构)
+ * @note      该类用于存储日志信息
+ --------------------------------------------------------------------------------------------------------------------------*/
+class LogInfo
+{
+public:
+  //库文件的名称，用channel来设置
+  std::string Channel;
+  //库版本
+  std::string Version;
+  //库文件的位置
+  std::string Location;
+  severity_level LogLevel;
+};
 
 
-
-
-/**
+/** --------------------------------------------------------------------------------------------------------------------------
  * @brief 日志类
  * ! 该类为单例模式
- */
+ --------------------------------------------------------------------------------------------------------------------------*/
 class Logger {
 
 public:
@@ -226,32 +230,54 @@ public:
   Logger(Logger&&) = delete;                  // 删除移动构造函数
   Logger& operator=(Logger&&) = delete;       // 删除移动赋值函数
 
-  /**
+  /** --------------------------------------------------------------------------------------------------------------------------
    * @brief 初始化日志
    * @note
-   * @param  channel 日志通道名称
+   * @param  logInfo 日志初始化信息的结构体
    * @return true
    * @return false
-   */
-  static bool InitBoostlog(const std::string& channel);
+   --------------------------------------------------------------------------------------------------------------------------*/
+  static bool InitBoostlog(const LogInfo& logInfo);
 
 
   static const std::string GetLogDirectory();
-  static const std::string GetWorkingDirectory(bool bBackslash = true);
-  // 自定义的文件打开处理器
-  static void custom_open_handler2(sinks::text_file_backend::stream_type& file_stream);
+  static const std::string GetWorkingDirectory(bool bBackslash = true, bool bUseLinuxSlash = true);
+  // 自定义的文件打开处理器，用于在文件打开时进行一些自定义的处理
 
+  static void open_handler(sinks::text_file_backend::stream_type& file_stream);
+  // 自定义的文件关闭处理器，用于在文件关闭时进行一些自定义的处理
+
+  static void close_handler(sinks::text_file_backend::stream_type& file_stream);
+
+
+  static bool Load();
 
   //static std::string path_to_filename(std::string path);
-
+public:
 //文件后端格式器
   static boost::shared_ptr<sinks::text_file_backend> m_pFileBackend;
   //文件后端格式器-收集全部库的日志
-  static boost::shared_ptr<sinks::text_file_backend> m_pFileBackendAll;
+  //static boost::shared_ptr<sinks::text_file_backend> m_pFileBackendAll;
 
   static inline std::shared_mutex m_log_mtx;
   //信号量
   static std::shared_ptr<std::ex_counting_semaphore<>> m_pSemaphore;
 
-  static inline std::string m_strChannelName = "Core";
+  static inline LogInfo m_logInfo;
+  // static inline std::string m_strChannelName = "Core";
+  // static inline std::string m_strVersion = "1.0.0";
 };  // class Logger
+
+
+
+template<typename ValueType>
+ValueType set_get_attrib(const char* name, ValueType value)
+{
+  //! 很重要！使用互斥锁保护，避免多线程同时输出日志时出现混乱
+  std::lock_guard<std::shared_mutex> guard(Logger::m_log_mtx);
+  auto attr = boost::log::attribute_cast<boost::log::attributes::mutable_constant<ValueType>>(boost::log::core::get()->get_global_attributes()[name]);
+  attr.set(value);
+  return attr.get();
+}
+
+

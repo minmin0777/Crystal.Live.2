@@ -1,7 +1,27 @@
-﻿#include "pch.h"
+﻿/*————————————————————————————————————————————————————————————————————————————————————————
+ * @Author: jason minmin0777@126.com
+ * @Date: 2024-08-07 16:15:12
+ * @LastEditors: jason minmin0777@126.com
+ * @LastEditTime: 2024-08-26 14:20:36
+ * @FilePath: \Crystal.Live.2\src\library\Config\src\ConfigInfo.cpp
+ * @Description:
+ * @
+ * @#|----------------------------------------------------------------------------|
+ * @#|  ClassName         : Description                                           |
+ * @#|----------------------------------------------------------------------------|
+ * @#|  Change History :                                                          |
+ * @#|  <Date>     | <Version> | <Author>       | <Description>                   |
+ * @#|----------------------------------------------------------------------------|
+ * @#|  2024/05/02 | 0.0.0.1   | jason.chen     | Create file                     |
+ * @#|----------------------------------------------------------------------------|
+ * @#|                                                                            |
+ * @#|----------------------------------------------------------------------------|
+ * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
+ ————————————————————————————————————————————————————————————————————————————————————————*/
+#include "pch.h"
 #include <ConfigInfo.h>
-
-
+#include <Common.h>
+#include <QDebug>
 CConfigInfo::CConfigInfo()
 {
     Load();
@@ -14,52 +34,69 @@ CConfigInfo::~CConfigInfo()
 
 bool CConfigInfo::Load()
 {
+
+
+
     using namespace boost::locale::conv;
     //m_strConfigPath = "./config/";
     try {
 
         //定义basic_ptree<std::string, std::string>对象
         boost::property_tree::ptree pt;
-        std::string strFilePath = Common::Utility::GetWorkerDirectory();
+        std::string strFilePath = Common::Utility::GetWorkingDirectory();
+
         boost::algorithm::replace_all(strFilePath, "\\", "/");
-        strFilePath += "config/Setting.json";
-        //读取json文件
-        boost::property_tree::read_json(strFilePath, pt);
+        strFilePath += "Configure/system.dat";
+        LOG(DEBUG) << "strFilePath:" << strFilePath;
+        // 打开文件
+        std::ifstream file(strFilePath);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file\n";
+            return 1;
+        }
 
-        // //得到TCS服务器信息
-        // m_TCSServerInfo.ssi = pt.get<int32_t>("tcs_server.ssi");
-        // m_TCSServerInfo.uid = from_utf(pt.get<std::string>("tcs_server.uid"), "GBK");
-        // m_TCSServerInfo.pwd = from_utf(pt.get<std::string>("tcs_server.pwd"), "GBK");
+        // 读取文件内容到字符串
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string jsonStr = buffer.str();
 
-        // //得到Websock服务启动信息
-        // m_wsServerInfo.Port = pt.get<int32_t>("sync.ws_servers.port");
-        // m_wsServerInfo.Uid = from_utf(pt.get<std::string>("sync.ws_servers.user"), "GBK");
-        // m_wsServerInfo.Pwd = from_utf(pt.get<std::string>("sync.ws_servers.pwd"), "GBK");
-
-        // //得到CQ的RestAPI服务的信息，用于信令传递
-        // m_RestAPI_server_info.Url = from_utf(pt.get<std::string>("sync.restapi_server.url"), "GBK");
-        // m_RestAPI_server_info.Port = pt.get<int32_t>("sync.restapi_server.port");
-
+        // 关闭文件
+        file.close();
 
 
-        // //获取日志配置属性
-        // m_nLog_Output_Mode = pt.get<int>("log.output_mode");
-        // m_nLog_KeepDays = pt.get<int>("log.keepdays");
-        // m_nLog_Level = pt.get<int>("log.level");
-        // boost::log::core::get()->reset_filter();
+        LOG(DEBUG) << "jsonStr:" << jsonStr;
 
-        // boost::log::core::get()->set_filter
-        // (
-        //     expr::attr<LOG_level>("Severity") >= m_nLog_Level
-        // );
+        auto jv = boost::json::parse(jsonStr);
+        boost::json::value log = jv.at("log");
+        // 访问解析后的数据
+        std::string name = log.at("name").as_string().c_str();
+        LOG(DEBUG) << "name:" << name;
+        int64_t age = log.at("keepdays").as_int64();
+        int64_t level = log.at("level").as_int64();
+        boost::json::value pcap = jv.at("pcap");
+        int64_t mode = pcap.at("mode").as_int64();
+        m_strfilter = pcap.at("filter").as_string().c_str();
+        boost::json::value devices = pcap.at("device");
+        m_mapNetworkAdapters.clear();
+        for (auto& device : devices.as_array())
+        {
 
-        // //获取任务启动时间和停止时间
-        // m_TaskStartTime = from_utf(pt.get<std::string>("task.start_time"), "GBK");
-        // m_TaskDuration = pt.get<double>("task.duration");
+            std::string DeviceID = device.at("id").as_string().c_str();;
+
+            std::shared_ptr<NetworkAdapterInfo> pNetworkAdapter = std::make_shared<NetworkAdapterInfo>();
+            pNetworkAdapter->ID = DeviceID;
+            //没有创建的网络适配器信息，进行创建
+            if (m_mapNetworkAdapters.find(DeviceID) == m_mapNetworkAdapters.end())
+            {
+                m_mapNetworkAdapters.insert(std::make_pair(DeviceID, pNetworkAdapter));
+            }
+
+        }
 
 
         return true;
     }
+
     catch (std::exception& ex) {
         LOG(ERROR) << ex.what();
     }

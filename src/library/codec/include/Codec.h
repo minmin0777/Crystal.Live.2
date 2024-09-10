@@ -27,7 +27,7 @@
 namespace Codec
 {
     Codec_EXPORT std::string GetVersion();
-
+    Codec_EXPORT bool Init();
 
     class Codec_EXPORT CAudioCodec
     {

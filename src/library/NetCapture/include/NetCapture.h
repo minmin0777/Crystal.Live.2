@@ -19,12 +19,10 @@
  * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  ————————————————————————————————————————————————————————————————————————————————————————*/
 #pragma once
-#include <string>
-#include <memory>
-#include <vector>
-#include <iostream>
 #include "NetCapture.Export.h"
 #include <CNetDefine.h>
+// #include <Record.h>
+extern class CRecord;
 namespace NetCapture
 {
 
@@ -66,5 +64,13 @@ namespace NetCapture
      --------------------------------------------------------------------------------------*/
     NetCapture_EXPORT size_t GetDevicesInfo(std::vector<std::shared_ptr<NetworkAdapterInfo>>& devices);
 
+
+    /** --------------------------------------------------------------------------------------
+     * @name    bool SetRecordCallback(std::function<int32_t(std::shared_ptr<CRecord>)> callback)
+     * @brief   设置录音的回调函数
+     * @param   callback 录音的回调函数
+     * @return  true:成功 false:失败
+     --------------------------------------------------------------------------------------*/
+    NetCapture_EXPORT bool SetRecordCallback(std::function<int32_t(std::shared_ptr<CRecord>)> callback);
 
 }

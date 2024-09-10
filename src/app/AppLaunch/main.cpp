@@ -75,7 +75,7 @@
 #include <chrono>
 #include <boost/locale.hpp>
 #include <Config.h>
-
+#include "res/version.h"
 
 //使用chrono字面量
 using namespace  std::literals::chrono_literals;
@@ -109,7 +109,8 @@ void PrintEvery(int nEvery, int nCount) {
 }
 // 信号处理函数
 void signalHandler(int signum) {
-  std::cout << "捕获到信号 " << signum << std::endl;
+
+  std::cout << "捕获到退出信号 | Signal : " << signum << std::endl;
   // 设置退出标志
   NetCapture::StopCapture();
   exit(signum);
@@ -123,8 +124,15 @@ int main(int argc, char* argv[]) {
   // 设置SIGINT（Ctrl+C）的信号处理函数
   signal(SIGINT, signalHandler);
 
+  LogInfo logInfo;
+  logInfo.Channel = "AppLaunch";
+  logInfo.Version = g_Version;
+  logInfo.Location = Common::Utility::GetAppPath(logInfo.Channel);
+
+
   Common::SetEnv();
-  Common::InitLog("AppLaunch");
+
+  Common::InitLog(logInfo);
   QGuiApplication app(argc, argv);
   QTranslator translator;
   const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -174,6 +182,7 @@ int main(int argc, char* argv[]) {
   std::locale::global(loc);
 
   NetCapture::StartCapture();
+
 
   LOG(INFO) << QObject::tr("Start Capture").toStdString();
 

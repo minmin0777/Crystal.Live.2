@@ -26,18 +26,33 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
 #设置版本信息
-set(version 3.4.1)
+set (Product_VERSION_MAJOR 1)
+set (Product_VERSION_MINOR 0)
+set (Product_VERSION_PATCH 1)
+set (Product_VERSION_BUILD 1)
+
+set (version "${Product_VERSION_MAJOR}.${Product_VERSION_MINOR}.${Product_VERSION_PATCH}.${Product_VERSION_BUILD}")
+set (description "Audio库用于处理音频的相关操作。")
+
+if(MSVC)
+  add_compile_options(/EHsc /UTF-8)
+endif()
 
 #设定当前的项目为 Cryctal.Live.2
-project(Audio VERSION ${version} LANGUAGES CXX)
+project(Audio VERSION ${version} LANGUAGES CXX DESCRIPTION "${description}")
 
 
 
 add_library(${PROJECT_NAME} SHARED "")
 
-
+file(GLOB SOURCES "src/*.cpp")
+file(GLOB HEADERS "include/*.h")
 target_sources(${PROJECT_NAME}
-  PRIVATE main.cpp include/Audio.h ./include/Audio.Export.h )
+  PRIVATE ${SOURCES} ${HEADERS}
+  res/${PROJECT_NAME}.rc
+ )
+target_include_directories(${PROJECT_NAME} PRIVATE "include")
+
 message(STATUS "Core.Audio--项目源文件目录:${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 set_target_properties(${PROJECT_NAME}
@@ -77,10 +92,15 @@ generate_export_header(${PROJECT_NAME}
 # )
 
 
+#VersionManage.cmake 文件中包含了版本信息的配置,windows环境下并会设置rc文件
+include("${CMAKE_SOURCE_DIR}/cmake/version/VersionManage.cmake")
 
-
-
-
+set_version_infomation(
+  ${PROJECT_NAME} 
+  ${version}
+  ${description}
+  )
+# incl
 #设置Core.Audio的版本信息
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${version})
 set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION 3)
@@ -106,10 +126,14 @@ write_basic_package_version_file(
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost_lib)
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+# 添加WIN32_LEAN_AND_MEAN宏定义,防止windows.h与winsock2.h冲突
+if (MSVC)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
+endif()
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
 
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
-
+# add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:gbk>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}
@@ -171,13 +195,6 @@ endif()
 
 
 
-# LIST(APPEND LOG_Content "————————————————————————————————————————————————————————————————————————————————————————")
-# LIST(APPEND LOG_Content "编译时间起始:${build_time}")
-# LIST(APPEND LOG_Content "当前项目名称:${PROJECT_NAME}-${version}")
-# LIST(APPEND LOG_Content "调试符号路径:${CMAKE_BINARY_DIR}/pdb/${PROJECT_NAME}${version}.pdb")
-# LIST(APPEND LOG_Content "Git分支信息:${GIT_BRANCH} ${GIT_HASH}")
-
-
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # 设置 PDB 文件的名称和位置
@@ -208,11 +225,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/env/build_info.cmake)
 set(LOG_Content "---")
 get_build_infomation(${LOG_Content})
 
-
-
 foreach(log_text ${retValue})
- 
-
   add_custom_command(TARGET ${PROJECT_NAME}
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E echo "${log_text}" >> ${CMAKE_BINARY_DIR}/log.md

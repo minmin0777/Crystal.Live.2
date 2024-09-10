@@ -8,7 +8,7 @@
  *
  */
 
-#if !defined(WIN32)
+#if !defined(_WIN32) 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -52,7 +52,7 @@ static void intHandler(int dummy) {
 #endif
 
 #if defined(WIN32)
-static void syslog_wrapper(int a, const char *fmt, ...) {
+static void syslog_wrapper(int a, const char* fmt, ...) {
   va_list args;
 
   va_start(args, fmt);
@@ -78,33 +78,33 @@ static void usage(void);
 
 static void usage(void) {
   printf(PROG_NAME
-         " v%s\n"
-         "\nUsage: " PROG_NAME
-         " [required_options] [optional_options]\n"
-         "\n[required_options]\n"
-         "  -r --proxy       sip:proxyhost[:port],sip:proxyhost2[:port2],...\n"
-         "  -u --from        sip:user@host[:port],sip:user@host[:port],...\n"
-         "  -x --to          sip:user@host[:port],sip:user@host[:port],...\n"
-         "\n[optional_options]\n"
-         "  -d --daemon                                 (fork in daemon mode)\n"
-         "  -s --syslogandconsole                       (output syslog to stderr)\n"
-         "  -v --verbose     number                     (show exosip logs to stdout)\n"
-         "  -f --rate        number                     (default 2000 - interval between each outgoing message - ms)\n"
-         "\n[optional_sip_options]\n"
-         "  -U --username    username,username2,...     (authentication username list)\n"
-         "  -P --password    password,password2,...     (authentication password list)\n"
-         "  -o --outbound    sip:proxyhost[:port],sip:proxyhost2[:port2],...\n"
-         "                                              (outbound proxy list)\n"
-         "  -t --transport   UDP|TCP|TLS|DTLS           (default UDP)\n"
-         "  -e --expiry      number                     (default 0 second - ie: fetch bindings)\n"
-         "  -S --sslrootcapath /etc/path                (default /etc/ssl/certs/)\n"
-         "\n[very_optional_sip_options]\n"
-         "  -p --port        number                     (default 0 - random)\n"
-         "  -c --contact     sip:user@host[:port]\n"
-         "  -m --automasquerade                         (auto discover NAT IP:PORT)\n"
-         "\n"
-         "  -h --help\n",
-         eXosip_get_version());
+    " v%s\n"
+    "\nUsage: " PROG_NAME
+    " [required_options] [optional_options]\n"
+    "\n[required_options]\n"
+    "  -r --proxy       sip:proxyhost[:port],sip:proxyhost2[:port2],...\n"
+    "  -u --from        sip:user@host[:port],sip:user@host[:port],...\n"
+    "  -x --to          sip:user@host[:port],sip:user@host[:port],...\n"
+    "\n[optional_options]\n"
+    "  -d --daemon                                 (fork in daemon mode)\n"
+    "  -s --syslogandconsole                       (output syslog to stderr)\n"
+    "  -v --verbose     number                     (show exosip logs to stdout)\n"
+    "  -f --rate        number                     (default 2000 - interval between each outgoing message - ms)\n"
+    "\n[optional_sip_options]\n"
+    "  -U --username    username,username2,...     (authentication username list)\n"
+    "  -P --password    password,password2,...     (authentication password list)\n"
+    "  -o --outbound    sip:proxyhost[:port],sip:proxyhost2[:port2],...\n"
+    "                                              (outbound proxy list)\n"
+    "  -t --transport   UDP|TCP|TLS|DTLS           (default UDP)\n"
+    "  -e --expiry      number                     (default 0 second - ie: fetch bindings)\n"
+    "  -S --sslrootcapath /etc/path                (default /etc/ssl/certs/)\n"
+    "\n[very_optional_sip_options]\n"
+    "  -p --port        number                     (default 0 - random)\n"
+    "  -c --contact     sip:user@host[:port]\n"
+    "  -m --automasquerade                         (auto discover NAT IP:PORT)\n"
+    "\n"
+    "  -h --help\n",
+    eXosip_get_version());
 }
 
 struct reg_param {
@@ -116,29 +116,29 @@ struct reg_param {
 #define MAX_SIP_CONFIG 10
 
 struct sip_config_ua {
-  char *fromuser;
-  char *touser;
-  char *proxy;
-  char *outbound;
-  char *username;
-  char *password;
+  char* fromuser;
+  char* touser;
+  char* proxy;
+  char* outbound;
+  char* username;
+  char* password;
   struct reg_param regparam;
 };
 
-struct eXosip_t *context_eXosip;
+struct eXosip_t* context_eXosip;
 
 #if defined(WIN32) || defined(__linux)
 #define HAVE_LOCALTIME
 #endif
 #define MAX_LENGTH_TR 2024
 
-static void __osip_trace_func(const char *fi, int li, osip_trace_level_t level, const char *chfr, va_list args) {
-  char time_buffer[80] = {'\0'};
+static void __osip_trace_func(const char* fi, int li, osip_trace_level_t level, const char* chfr, va_list args) {
+  char time_buffer[80] = { '\0' };
 #if defined(HAVE_LOCALTIME)
   {
     time_t timestamp;
     struct timeval now;
-    struct tm *ptm;
+    struct tm* ptm;
 #ifdef __USE_POSIX
     struct tm local_tm;
 #endif
@@ -166,32 +166,39 @@ static void __osip_trace_func(const char *fi, int li, osip_trace_level_t level, 
     if (level == OSIP_FATAL) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "| FATAL | %s <%10.10s:%5i> ", time_buffer, fi, li);
 
-    } else if (level == OSIP_BUG) {
+    }
+    else if (level == OSIP_BUG) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "|  BUG  | %s <%10.10s:%5i> ", time_buffer, fi, li);
 
-    } else if (level == OSIP_ERROR) {
+    }
+    else if (level == OSIP_ERROR) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "| ERROR | %s <%10.10s:%5i> ", time_buffer, fi, li);
 
-    } else if (level == OSIP_WARNING) {
+    }
+    else if (level == OSIP_WARNING) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "|WARNING| %s <%10.10s:%5i> ", time_buffer, fi, li);
 
-    } else if (level == OSIP_INFO1) {
+    }
+    else if (level == OSIP_INFO1) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "| INFO1 | %s <%10.10s:%5i> ", time_buffer, fi, li);
 
-    } else if (level == OSIP_INFO2) {
+    }
+    else if (level == OSIP_INFO2) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "| INFO2 | %s <%10.10s:%5i> ", time_buffer, fi, li);
 
-    } else if (level == OSIP_INFO3) {
+    }
+    else if (level == OSIP_INFO3) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "| INFO3 | %s <%10.10s:%5i> ", time_buffer, fi, li);
 
-    } else if (level == OSIP_INFO4) {
+    }
+    else if (level == OSIP_INFO4) {
       in = snprintf(buffer, MAX_LENGTH_TR - 1, "| INFO4 | %s <%10.10s:%5i> ", time_buffer, fi, li);
     }
 
     vsnprintf(buffer + in, MAX_LENGTH_TR - 1 - in, chfr, args);
     buffer[MAX_LENGTH_TR - 1] = '\0';
 
-    if (debug > (int) level) {
+    if (debug > (int)level) {
       printf("%s", buffer);
     }
 
@@ -200,8 +207,8 @@ static void __osip_trace_func(const char *fi, int li, osip_trace_level_t level, 
 
 #ifdef TEST_NAPTR
 
-static int _naptr_lookup(const char *sip_server, struct osip_naptr *naptr_lookup, int keep_in_cache) {
-  osip_naptr_t *naptr_record;
+static int _naptr_lookup(const char* sip_server, struct osip_naptr* naptr_lookup, int keep_in_cache) {
+  osip_naptr_t* naptr_record;
   naptr_record = eXosip_dnsutils_naptr(context_eXosip, sip_server, "sip", "tcp", keep_in_cache);
 
   if (naptr_record != NULL) {
@@ -219,22 +226,26 @@ static int _naptr_lookup(const char *sip_server, struct osip_naptr *naptr_lookup
         eXosip_dnsutils_release(naptr_record);
         return OSIP_NOTFOUND;
 
-      } else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_INPROGRESS) {
+      }
+      else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_INPROGRESS) {
         /* 2: keep waiting (naptr answer not received) */
         osip_usleep(10000);
         continue;
 
-      } else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_NAPTRDONE) {
+      }
+      else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_NAPTRDONE) {
         /* 3: keep waiting (naptr answer received/no srv answer received) */
         osip_usleep(1000);
         continue;
 
-      } else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_SRVINPROGRESS) {
+      }
+      else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_SRVINPROGRESS) {
         /* 3: keep waiting (naptr answer received/no srv answer received) */
         osip_usleep(1000);
         continue;
 
-      } else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_SRVDONE) {
+      }
+      else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_SRVDONE) {
         /* 4: check if we have the one we want... */
         if (naptr_lookup != NULL) {
           memcpy(naptr_lookup, naptr_record, sizeof(struct osip_naptr));
@@ -243,12 +254,14 @@ static int _naptr_lookup(const char *sip_server, struct osip_naptr *naptr_lookup
         eXosip_dnsutils_release(naptr_record);
         return OSIP_SUCCESS;
 
-      } else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_NOTSUPPORTED) {
+      }
+      else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_NOTSUPPORTED) {
         /* 5: fallback to DNS A */
         eXosip_dnsutils_release(naptr_record);
         return OSIP_NOTFOUND;
 
-      } else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_RETRYLATER) {
+      }
+      else if (naptr_record->naptr_state == OSIP_NAPTR_STATE_RETRYLATER) {
         /* 5: fallback to DNS A */
         eXosip_dnsutils_release(naptr_record);
         return OSIP_TIMEOUT;
@@ -259,7 +272,7 @@ static int _naptr_lookup(const char *sip_server, struct osip_naptr *naptr_lookup
   return -1;
 }
 
-static int _resolv_naptr(const char *domain) {
+static int _resolv_naptr(const char* domain) {
   struct timeval time_start;
   struct timeval time_end;
   struct timeval time_sub;
@@ -277,16 +290,19 @@ static int _resolv_naptr(const char *domain) {
       /* enum resolved: */
       syslog_wrapper(LOG_INFO, "ENUM: %s -> %s", domain, naptr_lookup.sipenum_record.name);
 
-    } else {
-      struct osip_srv_record *best = NULL;
+    }
+    else {
+      struct osip_srv_record* best = NULL;
 
       if (naptr_lookup.sipudp_record.srventry[0].port > 0) {
         best = &naptr_lookup.sipudp_record;
 
-      } else if (naptr_lookup.siptcp_record.srventry[0].port > 0) {
+      }
+      else if (naptr_lookup.siptcp_record.srventry[0].port > 0) {
         best = &naptr_lookup.siptcp_record;
 
-      } else if (naptr_lookup.siptls_record.srventry[0].port > 0) {
+      }
+      else if (naptr_lookup.siptls_record.srventry[0].port > 0) {
         best = &naptr_lookup.siptls_record;
       }
 
@@ -319,11 +335,11 @@ static int _resolv_naptr(const char *domain) {
 
 #endif
 
-static int _am_option_route_add_lr(const char *orig_route, char *dst_route, int dst_route_size) {
-  osip_route_t *route_header = NULL;
-  char *new_route = NULL;
-  const char *tmp;
-  const char *tmp2;
+static int _am_option_route_add_lr(const char* orig_route, char* dst_route, int dst_route_size) {
+  osip_route_t* route_header = NULL;
+  char* new_route = NULL;
+  const char* tmp;
+  const char* tmp2;
   int i;
 
   memset(dst_route, '\0', dst_route_size);
@@ -361,8 +377,8 @@ static int _am_option_route_add_lr(const char *orig_route, char *dst_route, int 
   return 0;
 }
 
-static int _prepend_route(osip_message_t *sip, const char *hvalue) {
-  osip_route_t *route;
+static int _prepend_route(osip_message_t* sip, const char* hvalue) {
+  osip_route_t* route;
   int i;
   char outbound_route[256];
 
@@ -389,46 +405,47 @@ static int _prepend_route(osip_message_t *sip, const char *hvalue) {
 }
 
 
-static int start_register(struct sip_config_ua *config_ua, const char *contact) {
-  osip_message_t *reg = NULL;
+static int start_register(struct sip_config_ua* config_ua, const char* contact) {
+  osip_message_t* reg = NULL;
   int err;
-  
+
   if (contact != NULL && config_ua->regparam.expiry == -1) {
     config_ua->regparam.expiry = 300;
   }
-  
+
   eXosip_lock(context_eXosip);
-  
+
   if (contact == NULL && config_ua->regparam.expiry == -1) {
     config_ua->regparam.regid = eXosip_register_build_initial_register(context_eXosip, config_ua->fromuser, config_ua->proxy, contact, 0, &reg);
-    
-  } else {
+
+  }
+  else {
     config_ua->regparam.regid = eXosip_register_build_initial_register(context_eXosip, config_ua->fromuser, config_ua->proxy, contact, config_ua->regparam.expiry, &reg);
   }
-  
+
   if (config_ua->regparam.regid < 1) {
     eXosip_unlock(context_eXosip);
     syslog_wrapper(LOG_ERR, "REGISTRATION REPORT:[FAILURE] [%s][duration:0,000s] cannot prepare sip REGISTER [%i]", transport, config_ua->regparam.regid);
     return -1;
   }
-  
+
   _prepend_route(reg, config_ua->outbound);
-  
+
   if (contact == NULL && config_ua->regparam.expiry == -1) {
     int pos = 0;
-    
+
     while (!osip_list_eol(&reg->contacts, pos)) {
-      osip_contact_t *co;
-      
-      co = (osip_contact_t *) osip_list_get(&reg->contacts, pos);
+      osip_contact_t* co;
+
+      co = (osip_contact_t*)osip_list_get(&reg->contacts, pos);
       osip_list_remove(&reg->contacts, pos);
       osip_contact_free(co);
     }
   }
-  
+
   err = eXosip_register_send_register(context_eXosip, config_ua->regparam.regid, reg);
   eXosip_unlock(context_eXosip);
-  
+
   if (err != 0) {
     syslog_wrapper(LOG_ERR, "REGISTRATION REPORT:[FAILURE] [%s][duration:0,000s] cannot send sip REGISTER [%i]", transport, err);
     return -1;
@@ -436,26 +453,26 @@ static int start_register(struct sip_config_ua *config_ua, const char *contact) 
   return 0;
 }
 
-static int start_message(const char *method, struct sip_config_ua *config_ua, const char *data) {
-  osip_message_t *message = NULL;
+static int start_message(const char* method, struct sip_config_ua* config_ua, const char* data) {
+  osip_message_t* message = NULL;
   int tid;
-  
+
   eXosip_lock(context_eXosip);
-  
+
   tid = eXosip_message_build_request(context_eXosip, &message, method, config_ua->touser, config_ua->fromuser, NULL);
-  
+
   if (tid < 0) {
     eXosip_unlock(context_eXosip);
     syslog_wrapper(LOG_ERR, "MESSAGE REPORT:[FAILURE] [%s][duration:0,000s] cannot prepare sip %s [%i]", transport, method, tid);
     return -1;
   }
-  
+
   _prepend_route(message, config_ua->proxy);
   _prepend_route(message, config_ua->outbound);
-  
+
   tid = eXosip_message_send_request(context_eXosip, message);
   eXosip_unlock(context_eXosip);
-  
+
   if (tid < 0) {
     syslog_wrapper(LOG_ERR, "REGISTRATION REPORT:[FAILURE] [%s][duration:0,000s] cannot send sip REGISTER [%i]", transport, tid);
     return -1;
@@ -463,16 +480,16 @@ static int start_message(const char *method, struct sip_config_ua *config_ua, co
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   int c;
   int port = 0;
-  char *contact = NULL;
+  char* contact = NULL;
   struct sip_config_ua config_ua[MAX_SIP_CONFIG];
   int idx;
   int automasquerade = 0;
   int rate = 2000;
 
-  struct servent *service;
+  struct servent* service;
   char sslrootcapath[1024];
   int fork = 0;
   int log_perror = 0;
@@ -480,11 +497,11 @@ int main(int argc, char *argv[]) {
 
   char prog_name[32];
   int optval;
-  char *cur;
-  char *next;
-  
+  char* cur;
+  char* next;
+
   struct timeval time_interval;
-  
+
   snprintf(prog_name, sizeof(prog_name), "%s (%s)", PROG_NAME, eXosip_get_version());
 
   memset(&config_ua, 0, sizeof(struct sip_config_ua) * MAX_SIP_CONFIG);
@@ -506,7 +523,7 @@ int main(int argc, char *argv[]) {
 #ifdef _GNU_SOURCE
     int option_index = 0;
 
-    static struct option long_options[] = {{"deamon", no_argument, NULL, 'd'},
+    static struct option long_options[] = { {"deamon", no_argument, NULL, 'd'},
                                            {"from", required_argument, NULL, 'u'},
                                            {"to", required_argument, NULL, 'x'},
                                            {"proxy", required_argument, NULL, 'r'},
@@ -526,7 +543,7 @@ int main(int argc, char *argv[]) {
 
                                            {"help", no_argument, NULL, 'h'},
 
-                                           {NULL, 0, NULL, 0}};
+                                           {NULL, 0, NULL, 0} };
 
     c = getopt_long(argc, argv, short_options, long_options, &option_index);
 #else
@@ -562,7 +579,7 @@ int main(int argc, char *argv[]) {
 
     case 'e':
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	config_ua[idx].regparam.expiry = atoi(optarg);
+        config_ua[idx].regparam.expiry = atoi(optarg);
       }
       break;
 
@@ -580,7 +597,8 @@ int main(int argc, char *argv[]) {
       if (service) {
         port = ntohs(service->s_port);
 
-      } else {
+      }
+      else {
         port = atoi(optarg);
       }
 
@@ -591,122 +609,128 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'r':
-      idx=0;
+      idx = 0;
       cur = optarg;
       next = strchr(cur, ',');
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	if (cur == NULL) {
-	  break;
-	}
-	if (next == NULL) {
-	  config_ua[idx].proxy = cur;
-	  break;
-	} else {
-	  config_ua[idx].proxy = cur;
-	  next[0] = '\0';
-	  cur = next + 1;
-	  next = strchr(cur, ',');
-	}
+        if (cur == NULL) {
+          break;
+        }
+        if (next == NULL) {
+          config_ua[idx].proxy = cur;
+          break;
+        }
+        else {
+          config_ua[idx].proxy = cur;
+          next[0] = '\0';
+          cur = next + 1;
+          next = strchr(cur, ',');
+        }
       }
       break;
 
     case 'u':
-      idx=0;
+      idx = 0;
       cur = optarg;
       next = strchr(cur, ',');
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	if (cur == NULL) {
-	  break;
-	}
-	if (next == NULL) {
-	  config_ua[idx].fromuser = cur;
-	  break;
-	} else {
-	  config_ua[idx].fromuser = cur;
-	  next[0] = '\0';
-	  cur = next + 1;
-	  next = strchr(cur, ',');
-	}
+        if (cur == NULL) {
+          break;
+        }
+        if (next == NULL) {
+          config_ua[idx].fromuser = cur;
+          break;
+        }
+        else {
+          config_ua[idx].fromuser = cur;
+          next[0] = '\0';
+          cur = next + 1;
+          next = strchr(cur, ',');
+        }
       }
       break;
 
     case 'x':
-      idx=0;
+      idx = 0;
       cur = optarg;
       next = strchr(cur, ',');
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	if (cur == NULL) {
-	  break;
-	}
-	if (next == NULL) {
-	  config_ua[idx].touser = cur;
-	  break;
-	} else {
-	  config_ua[idx].touser = cur;
-	  next[0] = '\0';
-	  cur = next + 1;
-	  next = strchr(cur, ',');
-	}
+        if (cur == NULL) {
+          break;
+        }
+        if (next == NULL) {
+          config_ua[idx].touser = cur;
+          break;
+        }
+        else {
+          config_ua[idx].touser = cur;
+          next[0] = '\0';
+          cur = next + 1;
+          next = strchr(cur, ',');
+        }
       }
       break;
 
     case 'U':
-      idx=0;
+      idx = 0;
       cur = optarg;
       next = strchr(cur, ',');
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	if (cur == NULL) {
-	  break;
-	}
-	if (next == NULL) {
-	  config_ua[idx].username = cur;
-	  break;
-	} else {
-	  config_ua[idx].username = cur;
-	  next[0] = '\0';
-	  cur = next + 1;
-	  next = strchr(cur, ',');
-	}
+        if (cur == NULL) {
+          break;
+        }
+        if (next == NULL) {
+          config_ua[idx].username = cur;
+          break;
+        }
+        else {
+          config_ua[idx].username = cur;
+          next[0] = '\0';
+          cur = next + 1;
+          next = strchr(cur, ',');
+        }
       }
       break;
 
     case 'P':
-      idx=0;
+      idx = 0;
       cur = optarg;
       next = strchr(cur, ',');
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	if (cur == NULL) {
-	  break;
-	}
-	if (next == NULL) {
-	  config_ua[idx].password = cur;
-	  break;
-	} else {
-	  config_ua[idx].password = cur;
-	  next[0] = '\0';
-	  cur = next + 1;
-	  next = strchr(cur, ',');
-	}
+        if (cur == NULL) {
+          break;
+        }
+        if (next == NULL) {
+          config_ua[idx].password = cur;
+          break;
+        }
+        else {
+          config_ua[idx].password = cur;
+          next[0] = '\0';
+          cur = next + 1;
+          next = strchr(cur, ',');
+        }
       }
       break;
 
     case 'o':
-      idx=0;
+      idx = 0;
       cur = optarg;
       next = strchr(cur, ',');
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	if (cur == NULL) {
-	  break;
-	}
-	if (next == NULL) {
-	  config_ua[idx].outbound = cur;
-	  break;
-	} else {
-	  config_ua[idx].outbound = cur;
-	  next[0] = '\0';
-	  cur = next + 1;
-	  next = strchr(cur, ',');
-	}
+        if (cur == NULL) {
+          break;
+        }
+        if (next == NULL) {
+          config_ua[idx].outbound = cur;
+          break;
+        }
+        else {
+          config_ua[idx].outbound = cur;
+          next[0] = '\0';
+          cur = next + 1;
+          next = strchr(cur, ',');
+        }
       }
       break;
 
@@ -727,15 +751,15 @@ int main(int argc, char *argv[]) {
     if (config_ua[idx].fromuser == NULL)
       break;
     syslog_wrapper(LOG_INFO, "%s up and running [testing on [%s] REGISTER [%s] From: [%s]%s%s%s %s%s%s", prog_name, transport, config_ua[idx].proxy, config_ua[idx].fromuser, (config_ua[idx].username && config_ua[idx].password) ? " Username: [" : "", (config_ua[idx].username && config_ua[idx].password) ? config_ua[idx].username : "",
-		   (config_ua[idx].username && config_ua[idx].password) ? ":*****]" : "", config_ua[idx].outbound? "Route: [" : "", config_ua[idx].outbound? config_ua[idx].outbound : "", config_ua[idx].outbound ? "]" : "");
-    
+      (config_ua[idx].username && config_ua[idx].password) ? ":*****]" : "", config_ua[idx].outbound ? "Route: [" : "", config_ua[idx].outbound ? config_ua[idx].outbound : "", config_ua[idx].outbound ? "]" : "");
+
     if (!config_ua[idx].proxy || !config_ua[idx].fromuser || strlen(config_ua[idx].proxy) < 7 || strlen(config_ua[idx].fromuser) < 7) {
       syslog_wrapper(LOG_ERR, "REGISTRATION REPORT:[FAILURE] [%s][duration:0,000s] missing or broken mandatory parameter", transport);
       usage();
       exit(1);
     }
   }
-  
+
   if (osip_strcasecmp(transport, "UDP") != 0 && osip_strcasecmp(transport, "TCP") != 0 && osip_strcasecmp(transport, "TLS") != 0 && osip_strcasecmp(transport, "DTLS") != 0) {
     syslog_wrapper(LOG_ERR, "REGISTRATION REPORT:[FAILURE] [%s][duration:0,000s] wrong transport parameter", transport);
     usage();
@@ -765,16 +789,16 @@ int main(int argc, char *argv[]) {
   for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
     if (config_ua[idx].username && config_ua[idx].password) {
       err = eXosip_add_authentication_info(context_eXosip, config_ua[idx].username, config_ua[idx].username, config_ua[idx].password, NULL, NULL);
-      
+
       if (err) {
-	syslog_wrapper(LOG_ERR, "REGISTRATION REPORT:[FAILURE] [%s][duration:0,000s] cannot add credential [%i]", transport, err);
-	eXosip_quit(context_eXosip);
-	osip_free(context_eXosip);
-	exit(1);
+        syslog_wrapper(LOG_ERR, "REGISTRATION REPORT:[FAILURE] [%s][duration:0,000s] cannot add credential [%i]", transport, err);
+        eXosip_quit(context_eXosip);
+        osip_free(context_eXosip);
+        exit(1);
       }
     }
   }
-  
+
   optval = 1;
   eXosip_set_option(context_eXosip, EXOSIP_OPT_SET_TLS_VERIFY_CERTIFICATE, &optval);
 
@@ -796,7 +820,8 @@ int main(int argc, char *argv[]) {
   if (osip_strncasecmp(proxy, "sip:", 4) == 0) {
     _resolv_naptr(proxy + 4);
 
-  } else if (osip_strncasecmp(proxy, "sips:", 4) == 0) {
+  }
+  else if (osip_strncasecmp(proxy, "sips:", 4) == 0) {
     _resolv_naptr(proxy + 4);
   }
 #endif
@@ -806,13 +831,16 @@ int main(int argc, char *argv[]) {
   if (osip_strcasecmp(transport, "UDP") == 0) {
     err = eXosip_listen_addr(context_eXosip, IPPROTO_UDP, NULL, port, AF_INET, 0);
 
-  } else if (osip_strcasecmp(transport, "TCP") == 0) {
+  }
+  else if (osip_strcasecmp(transport, "TCP") == 0) {
     err = eXosip_listen_addr(context_eXosip, IPPROTO_TCP, NULL, port, AF_INET, 0);
 
-  } else if (osip_strcasecmp(transport, "TLS") == 0) {
+  }
+  else if (osip_strcasecmp(transport, "TLS") == 0) {
     err = eXosip_listen_addr(context_eXosip, IPPROTO_TCP, NULL, port, AF_INET, 1);
 
-  } else if (osip_strcasecmp(transport, "DTLS") == 0) {
+  }
+  else if (osip_strcasecmp(transport, "DTLS") == 0) {
     err = eXosip_listen_addr(context_eXosip, IPPROTO_UDP, NULL, port, AF_INET, 1);
   }
 
@@ -824,21 +852,21 @@ int main(int argc, char *argv[]) {
   }
 
   osip_gettimeofday(&time_interval, NULL);
-  
+
   for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
     if (config_ua[idx].fromuser == NULL)
       break;
     start_register(&config_ua[idx], contact);
   }
-  
+
   for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
     if (config_ua[idx].touser == NULL)
       break;
     start_message("MESSAGE", &config_ua[idx], "Hello World");
   }
-  
+
   for (; keepRunning;) {
-    eXosip_event_t *event;
+    eXosip_event_t* event;
     struct timeval now;
     struct timeval duration;
 
@@ -847,13 +875,13 @@ int main(int argc, char *argv[]) {
 
     if ((duration.tv_sec * 1000 + duration.tv_usec / 1000) > rate) {
       for (idx = 0; idx < MAX_SIP_CONFIG; idx++) {
-	if (config_ua[idx].touser == NULL)
-	  break;
-	start_message("MESSAGE", &config_ua[idx], "Hello World");
+        if (config_ua[idx].touser == NULL)
+          break;
+        start_message("MESSAGE", &config_ua[idx], "Hello World");
       }
       osip_gettimeofday(&time_interval, NULL);
     }
-    
+
     if (!(event = eXosip_event_wait(context_eXosip, 0, 1))) {
 #ifdef OSIP_MONOTHREAD
       eXosip_execute(context_eXosip);
@@ -882,20 +910,23 @@ int main(int argc, char *argv[]) {
       if (event->response == NULL) {
         syslog_wrapper(LOG_INFO, "REGISTRATION REPORT:[FAILURE] [%s]REGISTER [408][       ]", transport);
 
-      } else {
+      }
+      else {
         if (event->response->status_code == 401 || event->response->status_code == 407) {
-          osip_authorization_t *auth = NULL;
+          osip_authorization_t* auth = NULL;
           err = osip_message_get_authorization(event->request, 0, &auth);
 
           if (err < 0) {
 
-	    syslog_wrapper(LOG_INFO, "[%s] REGISTER [%i][%s]", transport, event->response->status_code, event->response->reason_phrase);
+            syslog_wrapper(LOG_INFO, "[%s] REGISTER [%i][%s]", transport, event->response->status_code, event->response->reason_phrase);
 
-          } else {
+          }
+          else {
             syslog_wrapper(LOG_INFO, "REGISTRATION REPORT:[FAILURE] [%s] REGISTER [%i][%s] - err=bad password", transport, event->response->status_code, event->response->reason_phrase);
           }
 
-        } else {
+        }
+        else {
           syslog_wrapper(LOG_INFO, "REGISTRATION REPORT:[FAILURE] [%s] REGISTER [%i][%s] err=%s", transport, event->response->status_code, event->response->reason_phrase, event->response->reason_phrase);
         }
       }
@@ -903,7 +934,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case EXOSIP_CALL_INVITE: {
-      osip_message_t *answer;
+      osip_message_t* answer;
       int i;
 
       i = eXosip_call_build_answer(context_eXosip, event->tid, 405, &answer);
@@ -927,7 +958,7 @@ int main(int argc, char *argv[]) {
     }
 
     case EXOSIP_MESSAGE_NEW: {
-      osip_message_t *answer;
+      osip_message_t* answer;
       int i;
 
       i = eXosip_message_build_answer(context_eXosip, event->tid, 405, &answer);
@@ -949,7 +980,7 @@ int main(int argc, char *argv[]) {
     }
 
     case EXOSIP_IN_SUBSCRIPTION_NEW: {
-      osip_message_t *answer;
+      osip_message_t* answer;
       int i;
 
       i = eXosip_insubscription_build_answer(context_eXosip, event->tid, 405, &answer);
@@ -976,11 +1007,11 @@ int main(int argc, char *argv[]) {
 
     case EXOSIP_CALL_MESSAGE_REQUESTFAILURE:
       if (event->did < 0 && event->response != NULL && (event->response->status_code == 407 || event->response->status_code == 401))
-	eXosip_default_action(context_eXosip, event);
+        eXosip_default_action(context_eXosip, event);
       break;
     case EXOSIP_MESSAGE_REQUESTFAILURE:
       if (event->request != NULL && event->response != NULL && !MSG_IS_PUBLISH(event->request) && (event->response->status_code == 407 || event->response->status_code == 401))
-	eXosip_default_action(context_eXosip, event);
+        eXosip_default_action(context_eXosip, event);
       break;
     default:
       syslog_wrapper(LOG_DEBUG, "received unknown eXosip event (type, did, cid) = (%d, %d, %d)", event->type, event->did, event->cid);

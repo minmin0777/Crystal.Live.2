@@ -1,8 +1,9 @@
-﻿/*————————————————————————————————————————————————————————————————————————————————————————
+﻿
+/*————————————————————————————————————————————————————————————————————————————————————————
  * @Author: jason minmin0777@126.com
  * @Date: 2024-08-07 16:15:12
  * @LastEditors: jason minmin0777@126.com
- * @LastEditTime: 2024-08-09 10:07:05
+ * @LastEditTime: 2024-08-26 14:34:51
  * @FilePath: \Crystal.Live.2\src\library\Config\src\Config.cpp
  * @Description:
  * @
@@ -18,24 +19,26 @@
  * @#|----------------------------------------------------------------------------|
  * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  ————————————————————————————————————————————————————————————————————————————————————————*/
+
+
 #include <ConfigInfo.h> 
 #include <csignal>
 #include "Config.h"
 #include <Common.h>
+#include <QtProtobuf>
+#include <QProtobufSerializer>
  // 定义一个信号处理函数
-// void signalHandler(int signal)
-// {
-//     // LOG(fatal) << OUTPUT_LINE << std::endl;
-//     // LOG(fatal) << "Caught signal " << signal << "----"
-//     //     << "LibName:" << "Audio library" << ":"
-//     //     << "Version:" << g_Version
-//     //     << std::endl;
-//     // LOG(fatal) << boost::stacktrace::stacktrace();
-//     // LOG(fatal) << OUTPUT_LINE << std::endl;
-//     exit(signal);
-// }
+
+
 
 static inline std::string g_Version = "1.0.0.1";
+
+
+namespace qt::examples::sensors {
+    class Coordinates;
+    class Temperature;
+    class WarningNotification;
+}
 namespace Config
 {
     std::string GetVersion()
@@ -47,11 +50,28 @@ namespace Config
     {
 
         Common::SetEnv();
-        Common::InitLog("Config");
-        LOG(INFO) << "Config init success";
-        CConfigInfo& config = CConfigInfo::Get();
+
+        LogInfo logInfo;
+        logInfo.Channel = "Config";
+        logInfo.Version = GetVersion();
+        logInfo.Location = Common::Utility::GetAppPath(logInfo.Channel);
+
+        Common::InitLog(logInfo);
+        LOG(DEBUG) << "Config init success";
+
+        auto logger = Service_logger::get();
+        std::cout << "logger address:" << &logger << std::endl;
         return true;
     }
+
+    const CConfigInfo& GetConfigInfo()
+    {
+        return CConfigInfo::Get();
+
+    }
+
+
+
 }
 
 

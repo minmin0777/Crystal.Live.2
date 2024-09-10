@@ -54,6 +54,34 @@
             "externalConsole": false
         },
         {
+            "name": "(Windows) Debug 调试 RecordService",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/build/x64-debug/bin/RecordService.exe",
+            "args": [
+                "-console"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/out/build/x64-debug/bin",
+            "environment": [],
+            "console": "integratedTerminal",
+            "externalConsole": false
+        },
+        {
+            "name": "(Windows) Release 调试 RecordService",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/build/x64-Release/bin/RecordService.exe",
+            "args": [
+                "-console"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/out/build/x64-Release/bin",
+            "environment": [],
+            "console": "integratedTerminal",
+            "externalConsole": false
+        },
+        {
             "name": "(Windows) Debug 调试 AppLaunch",
             "type": "cppvsdbg",
             "request": "launch",

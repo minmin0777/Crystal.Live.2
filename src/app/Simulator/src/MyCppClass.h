@@ -25,9 +25,21 @@
 #define MYCPPCLASS_H
 
 #include <QObject>
-#ifndef _WINSOCK2API_
-#include <winsock2.h>
+
+
+#if defined(_WIN32) || defined(_WIN64)
+    #include <Winsock2.h>
+    #include <Iphlpapi.h>
+    #include <ws2tcpip.h>
+    #pragma comment(lib, "ws2_32.lib")
+    #pragma comment(lib, "iphlpapi.lib")
+#else
+    #include <sys/socket.h>
+    #include <sys/ioctl.h>
+    #include <net/if.h>
+    #include <unistd.h>
 #endif
+
 #include "hv/hloop.h"
 #include "hv/hsocket.h"
 #include <memory>

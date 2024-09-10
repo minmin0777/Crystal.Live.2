@@ -1,13 +1,13 @@
 ﻿/*————————————————————————————————————————————————————————————————————————————————————————
  * @Author: jason minmin0777@126.com
- * @Date: 2024-07-09 15:53:58
+ * @Date: 2024-08-07 16:15:12
  * @LastEditors: jason minmin0777@126.com
- * @LastEditTime: 2024-07-10 16:09:21
+ * @LastEditTime: 2024-08-22 14:19:45
  * @FilePath: \Crystal.Live.2\src\library\NetCapture\src\CCaptureThreadWrapper.cpp
  * @Description:
  * @
  * @#|----------------------------------------------------------------------------|
- * @#|  Remark         : Description                                              |
+ * @#|  ClassName         : Description                                           |
  * @#|----------------------------------------------------------------------------|
  * @#|  Change History :                                                          |
  * @#|  <Date>     | <Version> | <Author>       | <Description>                   |
@@ -18,13 +18,15 @@
  * @#|----------------------------------------------------------------------------|
  * @Copyright (c) 2024 by ${git_name_email}, All Rights Reserved.
  ————————————————————————————————————————————————————————————————————————————————————————*/
+
 #include "CCaptureThreadWrapper.h"
 #include <Common.h>
 #include <regex>
 #include <qtranslator.h>
 #include <CNetCapture.h>
-
-
+#include <Record.h>
+#include <RtpParse.h>
+#include <Config.h>
  /** --------------------------------------------------------------------------------------------------------------------------
   * @brief 构造函数
   * @param pNetAdapterInfo 网络适配器信息
@@ -82,155 +84,187 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
         {
             // 创建一个错误码
             std::error_code ec(-101, std::generic_category());
-            std::string strError = std::format("无法解析过滤表达式:{0} | {1}", strFilter, pcap_geterr(pcap));
+            std::string strError = std::format("无法解析过滤表达式:{0} \n err:{1}", strFilter, pcap_geterr(pcap));
             throw std::system_error(ec, strError);
 
         }
         // 设置pcap过滤器
         ret = pcap_setfilter(pcap, &filter);
+
+
+
         // 检查sip消息正则表达式，用于过滤sip消息
         std::regex sip_regex(R"(^SIP/2\.0 |^INVITE |^ACK |^BYE |^CANCEL |^OPTIONS |^REGISTER |^NOTIFY |^SUBSCRIBE |^REFER |^INFO |^MESSAGE)");
         while (1)
         {
-            // 检查线程状态
-            if (m_TaskStatus == Thread_Status::Thread_Status_Stop)
+            try
             {
-                LOG(WARN) << "m_TaskStatus == Thread_Status::Thread_Status_Stop ,thread exit";
-                break;
-            }
-            // 从网卡中读取一个包
-            int ret = pcap_next_ex(pcap, &pPacketHeader, (const u_char**)&pPacketData);
-            if (ret != PCAP_READ_PACKET_RETURN_SUCCESS)
-            {
-
-                if (ret == PCAP_READ_PACKET_RETURN_TIMEOUT) //抓包超时，打印等待包的日志
+                // 检查线程状态
+                if (m_TaskStatus == Thread_Status::Thread_Status_Stop)
                 {
-                    LOG_EVERY(WARN, 100) << QObject::tr("pcap_next_ex Timeout ret:").toStdString() << ret;
+                    LOG(WARN) << "m_TaskStatus == Thread_Status::Thread_Status_Stop ,thread exit";
+                    break;
                 }
+                // 从网卡中读取一个包
+                int ret = pcap_next_ex(pcap, &pPacketHeader, (const u_char**)&pPacketData);
+                if (ret != PCAP_READ_PACKET_RETURN_SUCCESS)
+                {
+
+                    if (ret == PCAP_READ_PACKET_RETURN_TIMEOUT) //抓包超时，打印等待包的日志
+                    {
+                        LOG_EVERY(WARN, 100) << QObject::tr("pcap_next_ex Timeout ret:").toStdString() << ret;
+                    }
+                    continue;
+                }
+                if (ret == PCAP_READ_PACKET_RETURN_SUCCESS)
+                {
+
+                    LOG_EVERY(WARN, 10000) << "pcap_next_ex return : " << ret;
+                    std::shared_ptr<PCAP_PACKAGE> pPcapPackage = std::make_shared<PCAP_PACKAGE>();
+
+                    pPcapPackage->nContentLen = pPacketHeader->caplen;
+                    //PCAP_PACKAGE pcapPackage;
+                    memcpy(&pPcapPackage->header, pPacketHeader, sizeof(*pPacketHeader));
+                    pPcapPackage->pData = new char[pPacketHeader->caplen];
+                    //pcapPackage.pData = (char*)HeapAlloc(g_cRuntimeCommon.GetDefaultHeap(), HEAP_ZERO_MEMORY, pPacketHeader->caplen);
+                    memcpy(pPcapPackage->pData, pPacketData, pPacketHeader->caplen);
+                    const char* pCurPointer = (const char*)pPacketData;       // 指针游标，当前处理位置
+                    // 先取出Ethernet Header
+                    PETHERNET_HEADER pEthernet = (PETHERNET_HEADER)pCurPointer;
+                    pCurPointer += sizeof(ETHERNET_HEADER);
+                    //
+
+                    pPcapPackage->nContentLen -= sizeof(ETHERNET_HEADER);
+
+                    if (0x8 != pEthernet->EthernetType
+                        && 0x800 != pEthernet->EthernetType
+                        && 0x81 != pEthernet->EthernetType)
+                    {
+
+                        //HeapFree(g_cRuntimeCommon.GetDefaultHeap(), 0, pcapPackage.pData);
+                        continue;
+                    }
+                    if (0x81 == pEthernet->EthernetType)
+                    {
+                        // VLAN, 游标需要后移4 Bytes
+                        pCurPointer += 4;
+                        pPcapPackage->nContentLen -= 4;
+                    }
+
+                    PIP_HEADER pIPHeader = (PIP_HEADER)pCurPointer;
+                    pIPHeader->TotalLength = ntohs(pIPHeader->TotalLength);
+                    if (IP_PACKET_TCP != pIPHeader->Protocol && IP_PACKET_UDP != pIPHeader->Protocol)
+                    {
+                        continue;
+                    }
+                    pCurPointer += sizeof(IP_HEADER);
+                    pPcapPackage->nContentLen -= sizeof(IP_HEADER);
+
+                    if (IP_PACKET_TCP == pIPHeader->Protocol)
+                    {
+                        PTCP_HEADER pTcpHeader = (PTCP_HEADER)pCurPointer;
+
+                        // 网络字节序转成主机字节序
+                        pTcpHeader->SourcePort = ntohs(pTcpHeader->SourcePort);
+                        pTcpHeader->DestPort = ntohs(pTcpHeader->DestPort);
+                        pCurPointer += sizeof(TCP_HEADER);
+                        pPcapPackage->nContentLen -= sizeof(TCP_HEADER);
+                        //LOG(INFO) << "TCP Header: " << pTcpHeader->SourcePort << " -> " << pTcpHeader->DestPort;
+
+                    }
+
+                    if (IP_PACKET_UDP == pIPHeader->Protocol)
+                    {
+                        PUDP_HEADER pUDPHeader = (PUDP_HEADER)pCurPointer;
+
+                        // 网络字节序转成主机字节序
+                        pUDPHeader->SourcePort = ntohs(pUDPHeader->SourcePort);
+                        pUDPHeader->DestPort = ntohs(pUDPHeader->DestPort);
+                        pCurPointer += sizeof(UDP_HEADER);
+                        pPcapPackage->nContentLen -= sizeof(UDP_HEADER);
+                        //LOG(INFO) << "UDP Header: " << pUDPHeader->SourcePort << " -> " << pUDPHeader->DestPort;
+
+                    }
+
+
+
+                    //LOG(INFO) << Common::Utility::GetWorkingDirectory();
+
+                    // std::string strSrcMacAddress = Utility::GetMACAddress(pEthernet->SourceHostMac);
+                    // std::string strDstMacAddress = Utility::GetMACAddress(pEthernet->DestHostMac);
+
+
+                    // LOG(DEBUG) << "Ethernet Header: " << strSrcMacAddress << " -> " << strDstMacAddress << " Type: " << pEthernet->EthernetType;
+                    if (std::regex_search(pCurPointer, sip_regex))
+                    {
+                        pPcapPackage->pContent = new char[pPcapPackage->nContentLen + 1];
+                        pPcapPackage->nPackageType = PCAP_PACKAGE::ENUM_PACKAGE_TYPE::CONTROL;
+                        memset(pPcapPackage->pContent, NULL, pPcapPackage->nContentLen + 1);
+                        memcpy(pPcapPackage->pContent, pCurPointer, pPcapPackage->nContentLen);
+                        // 进一步处理SIP消息...拷贝到消息队列
+                        // LOG(HEAD) << "SIP message detected :" << pPcapPackage->nContentLen << "\n" << pPcapPackage->pContent;
+                        m_queue.Enqueue(pPcapPackage);
+                        //CNetCapture::ParserSipMessage(strSipMsg);
+
+                        // LOG(DEBUG) << "Queue size: " << m_queue.Size()
+                        //     << " | pcapPackage.data :" << Common::Utility::toHex(pPcapPackage->pData, 10);
+
+                    }
+                    else
+                    {
+                        rtp_header rtpHeader;
+
+                        // RTP消息
+                        if (!IsRTPPacket((const char*)pCurPointer, pPcapPackage->nContentLen))
+                        {
+                            // RTP消息
+
+                            continue;
+                        }
+                        //parse_rtp_header((uint8_t*)pCurPointer, &rtpHeader);
+                        // LOG(HEAD) << "UDP message detected \n" << pCurPointer;
+
+                        pPcapPackage->pContent = new char[pPcapPackage->nContentLen + 1];
+                        pPcapPackage->nPackageType = PCAP_PACKAGE::ENUM_PACKAGE_TYPE::RTP;
+                        memset(pPcapPackage->pContent, NULL, pPcapPackage->nContentLen + 1);
+                        memcpy(pPcapPackage->pContent, pCurPointer, pPcapPackage->nContentLen);
+
+                        m_queue.Enqueue(pPcapPackage);
+
+                        // LOG(DEBUG) << "Queue size: " << m_queue.Size()
+                        //     << " | pcapPackage.data :" << Common::Utility::toHex(pPcapPackage->pData, 10);
+                        // 进一步处理SIP消息...
+                    }
+                }
+
+            }
+            catch (const std::system_error& e)
+            {
+                LOG(ERROR) << "System Error: " << e.what() << " Error Code: " << e.code() << " Error Message: " << e.code().message();
                 continue;
+
             }
 
-            if (ret == PCAP_READ_PACKET_RETURN_SUCCESS)
+            catch (const std::exception& e)
             {
-                LOG(WARN) << "pcap_next_ex return : " << ret;
-                std::shared_ptr<PCAP_PACKAGE> pPcapPackage = std::make_shared<PCAP_PACKAGE>();
-
-                pPcapPackage->nContentLen = pPacketHeader->caplen;
-                //PCAP_PACKAGE pcapPackage;
-                memcpy(&pPcapPackage->header, pPacketHeader, sizeof(*pPacketHeader));
-                pPcapPackage->pData = new char[pPacketHeader->caplen];
-                //pcapPackage.pData = (char*)HeapAlloc(g_cRuntimeCommon.GetDefaultHeap(), HEAP_ZERO_MEMORY, pPacketHeader->caplen);
-                memcpy(pPcapPackage->pData, pPacketData, pPacketHeader->caplen);
-                const char* pCurPointer = (const char*)pPacketData;       // 指针游标，当前处理位置
-                // 先取出Ethernet Header
-                PETHERNET_HEADER pEthernet = (PETHERNET_HEADER)pCurPointer;
-                pCurPointer += sizeof(ETHERNET_HEADER);
-                //
-
-                pPcapPackage->nContentLen -= sizeof(ETHERNET_HEADER);
-
-
-                if (0x8 != pEthernet->EthernetType
-                    && 0x800 != pEthernet->EthernetType
-                    && 0x81 != pEthernet->EthernetType)
-                {
-
-                    //HeapFree(g_cRuntimeCommon.GetDefaultHeap(), 0, pcapPackage.pData);
-                    continue;
-                }
-                if (0x81 == pEthernet->EthernetType)
-                {
-                    // VLAN, 游标需要后移4 Bytes
-                    pCurPointer += 4;
-                    pPcapPackage->nContentLen -= 4;
-                }
-
-
-                PIP_HEADER pIPHeader = (PIP_HEADER)pCurPointer;
-                pIPHeader->TotalLength = ntohs(pIPHeader->TotalLength);
-                if (IP_PACKET_TCP != pIPHeader->Protocol && IP_PACKET_UDP != pIPHeader->Protocol)
-                {
-                    continue;
-                }
-                pCurPointer += sizeof(IP_HEADER);
-                pPcapPackage->nContentLen -= sizeof(IP_HEADER);
-
-                if (IP_PACKET_TCP == pIPHeader->Protocol)
-                {
-                    PTCP_HEADER pTcpHeader = (PTCP_HEADER)pCurPointer;
-
-                    // 网络字节序转成主机字节序
-                    pTcpHeader->SourcePort = ntohs(pTcpHeader->SourcePort);
-                    pTcpHeader->DestPort = ntohs(pTcpHeader->DestPort);
-                    pCurPointer += sizeof(TCP_HEADER);
-                    pPcapPackage->nContentLen -= sizeof(TCP_HEADER);
-                    LOG(INFO) << "TCP Header: " << pTcpHeader->SourcePort << " -> " << pTcpHeader->DestPort;
-
-                }
-
-                if (IP_PACKET_UDP == pIPHeader->Protocol)
-                {
-                    PUDP_HEADER pUDPHeader = (PUDP_HEADER)pCurPointer;
-
-                    // 网络字节序转成主机字节序
-                    pUDPHeader->SourcePort = ntohs(pUDPHeader->SourcePort);
-                    pUDPHeader->DestPort = ntohs(pUDPHeader->DestPort);
-                    pCurPointer += sizeof(UDP_HEADER);
-                    pPcapPackage->nContentLen -= sizeof(UDP_HEADER);
-                    LOG(INFO) << "UDP Header: " << pUDPHeader->SourcePort << " -> " << pUDPHeader->DestPort;
-
-                }
-
-
-
-                LOG(INFO) << Common::Utility::GetWorkerDirectory();
-
-                // std::string strSrcMacAddress = Utility::GetMACAddress(pEthernet->SourceHostMac);
-                // std::string strDstMacAddress = Utility::GetMACAddress(pEthernet->DestHostMac);
-
-
-                // LOG(DEBUG) << "Ethernet Header: " << strSrcMacAddress << " -> " << strDstMacAddress << " Type: " << pEthernet->EthernetType;
-                if (std::regex_search(pCurPointer, sip_regex))
-                {
-                    LOG(HEAD) << "SIP message detected \n" << pCurPointer;
-                    std::string strSipMessage = pCurPointer;
-                    LOG(DEBUG) << "Sip message length: " << strSipMessage.length();
-                    pPcapPackage->pContent = new char[pPcapPackage->nContentLen + 1];
-                    pPcapPackage->nPackageType = PCAP_PACKAGE::ENUM_PACKAGE_TYPE::CONTROL;
-                    memset(pPcapPackage->pContent, NULL, pPcapPackage->nContentLen + 1);
-                    memcpy(pPcapPackage->pContent, pCurPointer, pPcapPackage->nContentLen);
-                    // 进一步处理SIP消息...拷贝到消息队列
-
-                    m_queue.Enqueue(pPcapPackage);
-
-                    std::string strSipMsg = pCurPointer;
-                    //CNetCapture::ParserSipMessage(strSipMsg);
-
-                    LOG(DEBUG) << "Queue size: " << m_queue.Size()
-                        << " | pcapPackage.data :" << Common::Utility::toHex(pPcapPackage->pData, 10);
-
-                }
-                else
-                {
-                    char buf[20] = { 0 };
-                    memcpy(buf, pCurPointer, 20);
-                    LOG(HEAD) << "Not SIP message detected \n" << buf;
-                    // 进一步处理SIP消息...
-                }
+                LOG(ERROR) << e.what();
+                continue;
             }
         }
         nRet = 1;   // 成功
     }
+
+    catch (const std::system_error& e)
+    {
+        nRet = -1;
+        LOG(ERROR) << "System Error: " << e.what() << " Error Code: " << e.code() << " Error Message: " << e.code().message();
+
+    }
+
     catch (const std::exception& e)
     {
         nRet = -1;  // 失败
         LOG(ERROR) << e.what();
-        if (pcap)
-        {
-            pcap_close(pcap);
-            pcap = nullptr;
-        }
-
     }
 
     if (pcap)
@@ -265,7 +299,8 @@ uint32_t CCaptureThreadWrapper::Start()
 
     LOG(HEAD) << OUTPUT_LINE
         << QObject::tr("*** CaptureThread Start ***").toStdString() << "\n"
-        << QObject::tr("Network Adapter : ").toStdString() << m_pNetAdapterInfo->Name << "\n"
+        << QObject::tr("Network Adapter Name: ").toStdString() << m_pNetAdapterInfo->Name << "\n"
+        << QObject::tr("Network Adapter ID: ").toStdString() << m_pNetAdapterInfo->ID << "\n"
         << QObject::tr("IP Address : ").toStdString() << m_pNetAdapterInfo->IpAddress << "\n"
         << QObject::tr("Thread id : ").toStdString() << std::this_thread::get_id() << "\n"
         << OUTPUT_LINE;
@@ -278,8 +313,17 @@ uint32_t CCaptureThreadWrapper::Start()
 
     try
     {
-        std::string szFilter = "port 5060 and src host 192.168.8.147 or dst host 192.168.8.147";
-        nRet = StartCaptureByPcap(szFilter);
+
+        //std::string szFilter = std::format("port 5060 and (udp and  port not 8500 and port not 5353 and port not 53 and port not 1900 and port not 5355 and port not 138 and port not 137 and port not 443 and port not 80) ");
+
+        // for (size_t i = 0; i < count; i++)
+        // {
+        //     /* code */
+        // }
+
+
+
+        nRet = StartCaptureByPcap(Config::GetConfigInfo().m_strfilter);
     }
     catch (const std::system_error& e)
     {
@@ -295,7 +339,8 @@ uint32_t CCaptureThreadWrapper::Start()
 
     LOG(HEAD) << OUTPUT_LINE
         << QObject::tr("*** CaptureThread end ***").toStdString() << "\n"
-        << QObject::tr("Network Adapter : ").toStdString() << m_pNetAdapterInfo->Name << "\n"
+        << QObject::tr("Network Adapter Name: ").toStdString() << m_pNetAdapterInfo->Name << "\n"
+        << QObject::tr("Network Adapter ID: ").toStdString() << m_pNetAdapterInfo->ID << "\n"
         << QObject::tr("IP Address : ").toStdString() << m_pNetAdapterInfo->IpAddress << "\n"
         << QObject::tr("Thread id : ").toStdString() << std::this_thread::get_id() << "\n"
         << OUTPUT_LINE;
@@ -323,6 +368,7 @@ void CCaptureThreadWrapper::Stop()
     if (_t_ParseQueue.joinable()) {
         _t_ParseQueue.join(); // 确保线程结束
     }
+    m_queue.shrink_to_fit();
 }
 
 /** --------------------------------------------------------------------------------------------------------------------------
@@ -340,19 +386,87 @@ void CCaptureThreadWrapper::ParseQueueThread()
         << OUTPUT_LINE;
     try
     {
+
         while (m_TaskStatus != Thread_Status::Thread_Status_Stop)
         {
             std::shared_ptr<PCAP_PACKAGE> pPcapPackage = nullptr;
-            if (m_queue.TryDequeue(pPcapPackage) && pPcapPackage != nullptr)
+            if (m_queue.WaitAndDequeue(pPcapPackage, 5) && pPcapPackage != nullptr)
             {
-                LOG(DEBUG) << "Queue size: " << m_queue.Size()
-                    << " | pPcapPackage->nContentLen :" << pPcapPackage->nContentLen
-                    << " | pPcapPackage->pContent :" << pPcapPackage->pContent;
-                CNetCapture::parse_sip_message_from_string(pPcapPackage->pContent);
+                LOG_EVERY(DEBUG, 10000) << "Queue size: " << m_queue.Size()
+                    << " | pPcapPackage->nContentLen :" << pPcapPackage->nContentLen;
+                //     << " | pPcapPackage->pContent : \n" << pPcapPackage->pContent;
 
+                // warning:判断是否是重复包，是的话就过滤掉
+                if (IsRepeatedPacket(pPcapPackage))
+                {
+                    continue;
+                }
+
+                // warning:判断包类型，无法分辨的包类型直接过滤掉
+                if (pPcapPackage->nPackageType == PCAP_PACKAGE::ENUM_PACKAGE_TYPE::UNKNOWN)
+                {
+                    LOG(ERROR) << "Package Type is UNKNOWN";
+                    continue;
+                }
+
+
+                // 解析控制信息包信息，一般为SIP消息或CTI消息
+                if (pPcapPackage->nPackageType == PCAP_PACKAGE::ENUM_PACKAGE_TYPE::CONTROL)
+                {
+                    std::shared_ptr<CRecord> pRecord = std::make_shared<CRecord>();
+                    CNetCapture::parse_sip_message_from_string(pPcapPackage->pContent, pRecord.get());
+                    if (pRecord->RecordType == "INVITE")
+                    {
+                        LOG(INFO) << "收到 SIP-INVITE消息"
+                            << " | CallID: " << pRecord->CallID
+                            << " | Caller: " << pRecord->Caller
+                            << " -> Callee: " << pRecord->Callee;
+                        //收到INVITE消息，创建一个新的录音对象
+                        if (CNetCapture::m_RecordCallback)
+                        {
+                            CNetCapture::m_RecordCallback(pRecord);
+                        }
+
+                    }
+
+                    if (pRecord->RecordType == "BYE")
+                    {
+                        LOG(INFO) << "收到 SIP-BYE消息"
+                            << " | CallID: " << pRecord->CallID
+                            << " | Caller: " << pRecord->Caller
+                            << " -> Callee: " << pRecord->Callee;
+                        //收到BYE消息，结束录音,删除录音对象
+
+
+                    }
+                    // LOG_EVERY(INFO, 10000) << pRecord->CallID;
+                    //m_pLastPackage = pPcapPackage; // warning:记录最后一个包,用于下次比较,防止重复包
+                    // 
+                    if (pRecord->CallID.empty())
+                    {
+                        LOG(ERROR) << "CallID is empty";
+                        continue;
+                    }
+
+                }
+                // 解析控制信息包信息，一般为SIP消息或CTI消息
+                if (pPcapPackage->nPackageType == PCAP_PACKAGE::ENUM_PACKAGE_TYPE::RTP)
+                {
+                    //LOG(INFO) << "RTP Count :" << nRTPCount;
+                    // RTP消息
+                    rtp_header rtpHeader;
+                    parse_rtp_header((uint8_t*)pPcapPackage->pContent, &rtpHeader);
+                    LOG(DEBUG) << "RTP Header: " << rtpHeader.ssrc << " -> " << rtpHeader.seq_num;
+                    m_pLastPackage = pPcapPackage; // warning:记录最后一个包,用于下次比较,防止重复包
+                    continue;
+
+                }
             }
             else
             {
+                // 使用移动语义创建一个新的队列，并交换旧队列和新队列的内容
+                //m_queue.Clear();
+                LOG_EVERY(DEBUG, 10000) << L"WaitAndDequeue - Timeout流程";
                 // 等待信号通知线程退出
                 std::unique_lock<std::mutex> lk(m_stop_mtx);
                 // 等待1s，如果返回值为std::cv_status::no_timeout，说明有信号通知线程退出
@@ -363,6 +477,7 @@ void CCaptureThreadWrapper::ParseQueueThread()
                     std::wstring strMsg = L"检测到退出信号,退出线程...";
                     throw ExceptionEx(strMsg);
                 }
+
             }
         }
     }
@@ -382,4 +497,30 @@ void CCaptureThreadWrapper::ParseQueueThread()
         << QObject::tr("IP Address : ").toStdString() << m_pNetAdapterInfo->IpAddress << "\n"
         << QObject::tr("Thread id : ").toStdString() << std::this_thread::get_id() << "\n"
         << OUTPUT_LINE;
+}
+
+/** --------------------------------------------------------------------------------------------------------------------------
+ * @name    void IsRepeatedPacket(const std::shared_ptr<PCAP_PACKAGE>& pPackage);
+ * @brief   判断当前包是否是重复的
+ * @param   pCurPackage 当前包
+ * @return  返回 true:重复包 false:不是重复包
+ * @warning 比较的时机-放入Queue的pop过程中进行比较
+-------------------------------------------------------------------------------------------------------------------------- */
+bool CCaptureThreadWrapper::IsRepeatedPacket(const std::shared_ptr<PCAP_PACKAGE>& pCurPackage) const
+{
+    if (pCurPackage == nullptr)
+        return false;
+
+    //未设置的m_pLastPackage 无需比较
+    if (m_pLastPackage == nullptr)
+        return false;
+
+    if (m_pLastPackage->CompareContent(pCurPackage))
+    {
+        LOG(DEBUG) << "RepeatedPacket:" << pCurPackage->pContent;
+        return true;
+    }
+    return false;
+
+
 }

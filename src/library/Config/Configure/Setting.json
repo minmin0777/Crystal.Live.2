@@ -1,0 +1,53 @@
+{
+	"tcs_server": {
+		"uid": "system",
+		"pwd": "system",
+		"ssi": "50001"
+	},
+	"sync": {
+		"ws_servers": {
+			"port": 10020,
+			"user": "",
+			"pwd": ""
+		},
+		"restapi_server": {
+			"url": "http://10.160.40.51:8004/CQVoice/CallEvent",
+			"port": 8004
+		}
+	},
+	
+	"manange_group" :[
+		
+			{"ssi": 50002,"port": "6004","slotIndex": "1"},
+			{"ssi": 50003,"port": "6004","slotIndex": "2"},
+			{"ssi": 50004,"port": "6004","slotIndex": "3"},
+			{"ssi": 50005,"port": "6004","slotIndex": "4"}
+		],
+	"mapping" : 
+	{
+		"first_slotIndex": 1,
+		"first_port": 5002,
+		"slot_count" :200
+	},
+
+	"pcap" :
+	{
+		"mode": 1,	
+		"filter":"(port 5060 or (port not 445 and port not 8500 and port not 5353 and port not 53 and port not 1900 and port not 5355 and port not 138 and port not 137 and port not 443 and port not 80))  and not ip6  and not ether src ff:ff:ff:ff:ff:ff and not ether dst ff:ff:ff:ff:ff:ff",
+		"device":"\\Device\\NPF_{55A10393-5AFF-421E-9111-1DA6B44AA75B}"
+	}
+
+	"log": {
+		"output_mode": 3,
+		"keepdays": 7,
+		"level": 2
+	},
+	"task": {
+		"interval": 2,
+		"start_time": "08:10",
+		"duration": 10
+	}
+}
+	
+	
+	

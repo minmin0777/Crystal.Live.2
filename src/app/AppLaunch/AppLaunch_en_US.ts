@@ -4,12 +4,12 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="main.cpp" line="178"/>
+        <location filename="main.cpp" line="187"/>
         <source>Start Capture</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="197"/>
+        <location filename="main.cpp" line="206"/>
         <source>Hello, world!</source>
         <translation type="unfinished"></translation>
     </message>
