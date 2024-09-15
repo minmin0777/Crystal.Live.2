@@ -27,6 +27,11 @@
 #include <Record.h>
 #include <RtpParse.h>
 #include <Config.h>
+#include <pjsip.h>
+#include <pjlib.h>
+#include <pjlib-util.h>
+#include <pjsua.h>
+#include <pjmedia.h>
  /** --------------------------------------------------------------------------------------------------------------------------
   * @brief 构造函数
   * @param pNetAdapterInfo 网络适配器信息
@@ -212,7 +217,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     }
                     else
                     {
-                        rtp_header rtpHeader;
+                        //rtp_header rtpHeader;
 
                         // RTP消息
                         if (!IsRTPPacket((const char*)pCurPointer, pPcapPackage->nContentLen))
@@ -415,30 +420,29 @@ void CCaptureThreadWrapper::ParseQueueThread()
                 {
                     std::shared_ptr<CRecord> pRecord = std::make_shared<CRecord>();
                     CNetCapture::parse_sip_message_from_string(pPcapPackage->pContent, pRecord.get());
-                    if (pRecord->RecordType == "INVITE")
-                    {
-                        LOG(INFO) << "收到 SIP-INVITE消息"
-                            << " | CallID: " << pRecord->CallID
-                            << " | Caller: " << pRecord->Caller
-                            << " -> Callee: " << pRecord->Callee;
-                        //收到INVITE消息，创建一个新的录音对象
-                        if (CNetCapture::m_RecordCallback)
-                        {
-                            CNetCapture::m_RecordCallback(pRecord);
-                        }
-
-                    }
-
-                    if (pRecord->RecordType == "BYE")
-                    {
-                        LOG(INFO) << "收到 SIP-BYE消息"
-                            << " | CallID: " << pRecord->CallID
-                            << " | Caller: " << pRecord->Caller
-                            << " -> Callee: " << pRecord->Callee;
-                        //收到BYE消息，结束录音,删除录音对象
+                    LOG(HEAD) << OUTPUT_LINE << "| Recv SIP [" << pRecord->RecordType << "] message\n"
+                        << "| CallID: " << pRecord->CallID << "\n"
+                        << "| Caller: " << pRecord->Caller << " -> Callee: " << pRecord->Callee << "\n"
+                        << "| StartTime: " << pRecord->StartTime << "\n"
+                        << OUTPUT_LINE;
+                    CNetCapture::m_RecordCallback(pRecord);
+                    // if (pRecord->RecordType == "INVITE")
+                    // {
 
 
-                    }
+                    //     //收到INVITE消息，创建一个新的录音对象
+                    //     if (CNetCapture::m_RecordCallback)
+                    //     {
+                    //         CNetCapture::m_RecordCallback(pRecord);
+                    //     }
+
+                    // }
+
+                    // if (pRecord->RecordType == "BYE")
+                    // {
+                    //     CNetCapture::m_RecordCallback(pRecord);
+                    //     //收到BYE消息，结束录音,删除录音对象
+                    // }
                     // LOG_EVERY(INFO, 10000) << pRecord->CallID;
                     //m_pLastPackage = pPcapPackage; // warning:记录最后一个包,用于下次比较,防止重复包
                     // 
@@ -454,9 +458,13 @@ void CCaptureThreadWrapper::ParseQueueThread()
                 {
                     //LOG(INFO) << "RTP Count :" << nRTPCount;
                     // RTP消息
-                    rtp_header rtpHeader;
+                    rtp_header rtpHeader = { 0 };
                     parse_rtp_header((uint8_t*)pPcapPackage->pContent, &rtpHeader);
-                    LOG(DEBUG) << "RTP Header: " << rtpHeader.ssrc << " -> " << rtpHeader.seq_num;
+                    if (rtpHeader.marker == 1)
+                    {
+                        LOG(INFO) << "RTP Header: " << rtpHeader.ssrc << " -> " << rtpHeader.seq_num;
+                    }
+
                     m_pLastPackage = pPcapPackage; // warning:记录最后一个包,用于下次比较,防止重复包
                     continue;
 

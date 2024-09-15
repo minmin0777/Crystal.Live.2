@@ -21,7 +21,7 @@
 #pragma once
 #include "NetCapture.Export.h"
 #include <CNetDefine.h>
-// #include <Record.h>
+ // #include <Record.h>
 extern class CRecord;
 namespace NetCapture
 {

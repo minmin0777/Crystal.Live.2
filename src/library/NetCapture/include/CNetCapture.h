@@ -31,16 +31,19 @@
 #include <CCaptureThreadWrapper.h>
 #include <pjsip.h>
 #include <pjlib.h>
+#include <pjlib-util.h>
+#include <pjsua.h>
+#include <pjmedia.h>
 // #include "../../RecordEngine/include/Record.h"
 
 extern class CRecord;
 
- /**
-  * @brief 网络抓包类
-  * @version 0.0.1
-  * @date 2024-07-08
-  * @remark
-  */
+/**
+ * @brief 网络抓包类
+ * @version 0.0.1
+ * @date 2024-07-08
+ * @remark
+ */
 class CNetCapture
 {
     CNetCapture() noexcept;                                 //构造函数
@@ -72,11 +75,19 @@ public:
 
     /*! --------------------------------------------------------------------------------------------------------------------------
      * @name   bool Init()
-     * @brief  获取设备
-     * @return 初始化是否成功,成功返回网络设备数量，失败返回0
-     * @remark GetDevicesInfo函数用于获取当前计算机的网络设备信息，并将设备信息存储在devices结构中，并返回设备数量。
+     * @brief  初始化网络抓包器
+     * @return 初始化是否成功,成功返回true ，失败返回 false
+     * @remark Init函数用于初始化网络抓包器,并分配相关的解析器资源。
     --------------------------------------------------------------------------------------------------------------------------*/
     size_t Init() noexcept;
+
+    /*! --------------------------------------------------------------------------------------------------------------------------
+     * @name   bool Release()
+     * @brief  释放网络抓包器
+     * @return 释放是否成功,成功返回true ，失败返回 false
+     * @remark Release函数用于释放网络抓包器,并释放相关的解析器资源。
+    --------------------------------------------------------------------------------------------------------------------------*/
+    size_t Release() noexcept;
 
     /*! --------------------------------------------------------------------------------------------------------------------------
      * @name   bool StartCapture()
@@ -147,6 +158,21 @@ protected:
     bool setFilter(const std::string& filter);
     bool setDevice(const std::string& device);
 
+    /** --------------------------------------------------------------------------------------
+     * @name    bool pjsip_Init();
+     * @brief   PJSIP库的初始化过程
+     * @param
+     * @return  true:成功 false:失败
+     --------------------------------------------------------------------------------------*/
+    bool pjsip_Init();
+
+    /** --------------------------------------------------------------------------------------
+     * @name    bool pjsip_Release();
+     * @brief   PJSIP库的释放过程
+     * @param
+     * @return  true:成功 false:失败
+     --------------------------------------------------------------------------------------*/
+    bool pjsip_Release();
 
 public:
     //设备信息 ,inline 修饰符用于提供static函数的定义，以便在头文件中使用
@@ -162,6 +188,12 @@ public:
 
     static inline std::function<int32_t(std::shared_ptr<CRecord>) > m_RecordCallback = nullptr;
 
+private:
 
+    static inline pjsip_endpoint* m_endpt = nullptr;
+    // static inline pj_thread_desc m_desc;
+    // static inline pj_thread_t* m_thread = nullptr;
+    static inline pj_caching_pool m_caching_pool;
+    //pj_caching_pool m_caching_pool; // pj_caching_pool_t 
 };
 

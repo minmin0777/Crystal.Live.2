@@ -92,6 +92,7 @@ private:
     std::mutex m_stop_mtx;
     //warning: 抓包队列，存放抓包数据
     Common::ThreadSafeQueue<std::shared_ptr<PCAP_PACKAGE>> m_queue;
+
     //最后的一个包，记录最后的包的作用是用于重复包的比较
     std::shared_ptr<PCAP_PACKAGE> m_pLastPackage = nullptr;
 };

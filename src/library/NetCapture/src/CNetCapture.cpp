@@ -38,8 +38,8 @@ const std::string THIS_FILE = "MyApp.cpp";
 #include "../../RecordEngine/include/Record.h"
 #include <QObject.h>
 #include <Config.h>
-#ifndef PJSIP_TEST_MEM_SIZE
-#  define PJSIP_TEST_MEM_SIZE       (2*1024*1024)
+#ifndef PJSIP_ALLOC_MEM_SIZE
+#  define PJSIP_ALLOC_MEM_SIZE       (8*1024*1024)
 #endif
 std::vector<std::shared_ptr<NetworkAdapterInfo>> CNetCapture::m_devices;
 std::vector<std::shared_ptr<CCaptureThreadWrapper>> CNetCapture::m_vtCaptureThreadWrappers;
@@ -47,40 +47,12 @@ CNetCapture::CNetCapture() noexcept
 {
     m_devices.clear();
     m_devices.shrink_to_fit();
-    // 设置日志等级为0，禁用日志输出
-    pj_log_set_level(0);
+
 }
 
 CNetCapture::~CNetCapture() noexcept
 {
-    //停止抓包线程，关闭管理句�?
-    StopCapture();
-    //清空设备列表
-    m_devices.clear();
-    m_devices.shrink_to_fit();
-
-
-
-    pj_bool_t thread_registered = PJ_FALSE;
-    pj_thread_desc desc;
-    pj_thread_t* pthread = nullptr;
-
-
-    if (!thread_registered && !pj_thread_is_registered())
-    {
-        if (pj_thread_register(NULL, desc, &pthread) == PJ_SUCCESS)
-        {
-            thread_registered = PJ_TRUE;
-        }
-    }
-    pj_shutdown();
-    if (pthread)
-    {
-        if (pj_thread_is_registered())
-            pj_thread_destroy(pthread);
-        pthread = nullptr;
-    }
-
+    Release();
 }
 /*! --------------------------------------------------------------------------------------------------------------------------
      * @name   bool Init()
@@ -90,9 +62,20 @@ CNetCapture::~CNetCapture() noexcept
     --------------------------------------------------------------------------------------------------------------------------*/
 size_t CNetCapture::Init() noexcept
 {
-    pj_init();
-    pjlib_util_init();
+    pjsip_Init();
     return GetDevicesInfo(m_devices);
+}
+size_t CNetCapture::Release() noexcept
+{
+    //停止抓包线程，关闭管理句�?
+    StopCapture();
+    //清空设备列表
+    m_devices.clear();
+    m_devices.shrink_to_fit();
+    pjsip_Release();
+
+
+    return true;
 }
 /*! --------------------------------------------------------------------------------------------------------------------------
      * @name   bool StartCapture()
@@ -130,11 +113,15 @@ bool CNetCapture::StartCapture() noexcept
     m_vtCaptureThreadWrappers.shrink_to_fit();
     for (size_t i = 0; i < m_devices.size(); i++)
     {
+        if (Config::GetConfigInfo().m_mapNetworkAdapters.find(m_devices[i]->ID) == Config::GetConfigInfo().m_mapNetworkAdapters.end())
+        {
+            continue;
+        }
 
         //创建线程并记录起�?
         auto pCaptureThreadWrapper =
             std::make_shared<CCaptureThreadWrapper>(m_devices[i].get());
-        m_vtCaptureThreadWrappers.emplace_back(pCaptureThreadWrapper);
+        m_vtCaptureThreadWrappers.push_back(pCaptureThreadWrapper);
 
         /* code */
     }
@@ -684,47 +671,39 @@ static void on_syntax_error(pj_scanner* scanner)
 }
 
 int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_str, void* pData) {
+
+    int nRet = 0;
+    pj_status_t status = PJ_FALSE;
+    pjsip_msg* msg = nullptr;
+    // pj_scan_state scan_state;
+    pj_pool_t* pool = nullptr;
+    // pjsip_endpoint* endpt = nullptr;
+    //pj_caching_pool caching_pool;
+    pjmedia_sdp_session* sdp_session = nullptr;
+    pj_scanner scanner;
+    pj_thread_desc desc;
+    pj_thread_t* thread = nullptr;
     try
     {
         CUSTOM_ASSERT(pData != nullptr);
         CRecord* pRecord = static_cast<CRecord*>(pData);
-
-        pj_status_t status;
-        pjsip_msg* msg = NULL;
-        // pj_scan_state scan_state;
-        pj_pool_t* pool = nullptr;
-        pjsip_endpoint* endpt = nullptr;
-        pj_caching_pool caching_pool;
-        pjmedia_sdp_session* sdp_session = NULL;
-        pj_scanner scanner;
-        pj_thread_desc desc;
-        pj_thread_t* thread = NULL;
-        // 注册当前线程
         status = pj_thread_register("MyPJSIPThread", desc, &thread);
         if (status != PJ_SUCCESS) {
             // 处理错误
         }
-        pj_caching_pool_init(&caching_pool, &pj_pool_factory_default_policy, PJSIP_TEST_MEM_SIZE);
+        // 创建内存池
 
-        pj_status_t rc = pjsip_endpt_create(&caching_pool.factory, "endpt", &endpt);
-        if (rc != PJ_SUCCESS) {
-            pj_caching_pool_destroy(&caching_pool);
-            return rc;
+        pool = pj_pool_create(&m_caching_pool.factory, "sip_parse", 4000, 4000, NULL);
+        if (pool == NULL) {
+            throw QObject::tr("Error creating pool").toStdString();
         }
-
         // 初始化扫描状态
         pj_scan_init(&scanner, (char*)sip_message_str.c_str(), sip_message_str.length(), 0, &on_syntax_error);
-
-        // 创建内存池
-        pool = pj_pool_create(&caching_pool.factory, "sip_parse", 4000, 4000, NULL);
         // 解析 SIP 消息
         pjsip_parser_err_report err_list;
         pj_list_init(&err_list);
         pjsip_msg* msg_t = pjsip_parse_msg(pool, (char*)sip_message_str.c_str(), sip_message_str.length(), &err_list);
-
         if (status == PJ_SUCCESS && msg_t != NULL) {
-
-
             //获取Callid
             pjsip_cid_hdr* cid_hdr = (pjsip_cid_hdr*)pjsip_msg_find_hdr(msg_t, PJSIP_H_CALL_ID, NULL);
 
@@ -738,26 +717,22 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                 // 打印或处理呼叫ID
                 LOG(DEBUG) << "Callid: " << strCallid;
                 pRecord->CallID = strCallid;
-
-
-
-
-
-
             }
             else {
                 // Call-ID头部未找到
-                LOG(WARN) << QObject::tr("Call-ID header not found").toStdString();
+                throw(QObject::tr("Call-ID header not found").toStdString());
             }
 
-            if (pjsip_method_cmp(&msg_t->line.req.method, &pjsip_invite_method) == 0)
-            {
-                pRecord->RecordType = "INVITE";
-            }
-            if (pjsip_method_cmp(&msg_t->line.req.method, &pjsip_bye_method) == 0)
-            {
-                pRecord->RecordType = "BYE";
-            }
+            std::string SipMethodName(static_cast<char*>(msg_t->line.req.method.name.ptr), msg_t->line.req.method.name.slen);
+            pRecord->RecordType = SipMethodName;
+            //     if (pjsip_method_cmp(&msg_t->line.req.method, &pjsip_invite_method) == 0)
+            //     {
+            //         pRecord->RecordType = "INVITE";
+            //     }
+            // if (pjsip_method_cmp(&msg_t->line.req.method, &pjsip_bye_method) == 0)
+            // {
+            //     pRecord->RecordType = "BYE";
+            // }
             // 查找Content-Type头部
             pjsip_ctype_hdr* ctype_hdr = (pjsip_ctype_hdr*)pjsip_msg_find_hdr(msg_t, PJSIP_H_CONTENT_TYPE, NULL);
 
@@ -777,7 +752,7 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                     // 解析SDP字符串
                     status = pjmedia_sdp_parse(pool, (char*)sdp_str.c_str(), sdp_str.length(), &sdp_session);
                     if (status != PJ_SUCCESS) {
-                        LOG(ERROR) << "SDP Parse Error" << status;
+                        throw(QObject::tr("SDP Parse Error").toStdString());
                         // 错误处理
                     }
                     else {
@@ -797,14 +772,8 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                             {
                                 unsigned port = media->desc.port; // 获取端口号
                                 LOG(INFO) << "media type: " << typeName << " | media port: " << port;
-
                             }
-
                         }
-
-
-
-
                     }
                     // 如果需要进一步解析SDP信息，可以使用PJSIP的SDP解析器或其他SDP解析库
                     // 注意：这里没有展示SDP解析的具体实现，因为它依赖于具体的解析库或PJSIP的SDP解析功能
@@ -840,10 +809,7 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                     //PJ_LOG(3, ("YourApp", "To: %.*s@%.*s", (int)username.slen, username.ptr, (int)host.slen, host.ptr));
                     std::string strFrom = std::string(display_name.ptr, display_name.slen) + "<" + std::string(username.ptr, username.slen) + "@" + std::string(host.ptr, host.slen) + ":" + std::to_string(sip_uri->port) + ">";
                     pRecord->Caller = strFrom;
-
-
                     LOG(DEBUG) << "From: " << strFrom;
-
                 }
             }
 
@@ -854,7 +820,6 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                 pj_str_t display_name;
                 // 获取 From 头部的地址
                 pjsip_uri* uri = to_hdr->uri;
-
                 // 检查 URI 类型是否为 pjsip_name_addr
                 if (PJSIP_URI_SCHEME_IS_SIP(uri) || PJSIP_URI_SCHEME_IS_SIPS(uri)) {
                     pjsip_sip_uri* sip_uri = (pjsip_sip_uri*)pjsip_uri_get_uri(uri);
@@ -872,45 +837,133 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                     //PJ_LOG(3, ("YourApp", "To: %.*s@%.*s", (int)username.slen, username.ptr, (int)host.slen, host.ptr));
                     std::string strTo = std::string(display_name.ptr, display_name.slen) + "<" + std::string(username.ptr, username.slen) + "@" + std::string(host.ptr, host.slen) + ":" + std::to_string(sip_uri->port) + ">";
                     pRecord->Callee = strTo;
-
-
                     LOG(DEBUG) << "To: " << strTo;
 
                 }
             }
         }
         else {
+            nRet = 0;
             // 解析失败处理
         }
-        if (thread)
-        {
-            pj_thread_destroy(thread);
-            thread = nullptr;
-        }
-        if (&scanner)
-        {
-            pj_scan_fini(&scanner);
-        }
-        if (pool)
-        {
-            pj_pool_release(pool);
-            pool = nullptr;
-        }
-        if (endpt)
-        {
-            pjsip_endpt_destroy(endpt);
-            endpt = nullptr;
-        }
-        if (&caching_pool)
-            pj_caching_pool_destroy(&caching_pool);
-
-
+        nRet = 1;
     }
     catch (const std::exception& e)
     {
+        nRet = 0;
         LOG(ERROR) << e.what();
-        return -1;
     }
-    return 0;
+    // if (thread)
+    // {
+    //     pj_thread_destroy(thread);
+    //     thread = nullptr;
+    // }
+    if (&scanner)
+    {
+        pj_scan_fini(&scanner);
+    }
+    if (pool)
+    {
+        pj_pool_release(pool);
+        pool = nullptr;
+    }
+    // if (endpt)
+    // {
+    //     pjsip_endpt_destroy(endpt);
+    //     endpt = nullptr;
+    // }
+    // if (&caching_pool)
+    //     pj_caching_pool_destroy(&caching_pool);
+    return nRet;
 }
 
+
+/** --------------------------------------------------------------------------------------
+ * @name    bool pjsip_Init();
+ * @brief   PJSIP库的初始化过程
+ * @param
+ * @return  true:成功 false:失败
+ --------------------------------------------------------------------------------------*/
+bool CNetCapture::pjsip_Init()
+{
+    pj_status_t status;
+    status = pj_init();
+    if (status != PJ_SUCCESS) {
+        return false;
+    }
+    status = pjlib_util_init();
+    if (status != PJ_SUCCESS) {
+        return false;
+    }
+
+    // status = pj_thread_init();
+    // if (status != PJ_SUCCESS) {
+    //     return false;
+    // }
+    // 设置日志等级为0，禁用日志输出
+    pj_log_set_level(3);
+    pj_caching_pool_init(&m_caching_pool, &pj_pool_factory_default_policy, PJSIP_ALLOC_MEM_SIZE);
+
+    pj_status_t rc = pjsip_endpt_create(&m_caching_pool.factory, "endpt", &m_endpt);
+    if (rc != PJ_SUCCESS) {
+        pj_caching_pool_destroy(&m_caching_pool);
+        throw(QObject::tr("pjsip_endpt_create failed").toStdString());
+    }
+
+    // 注册当前线程
+    // status = pj_thread_register("MyPJSIPThread", m_desc, &m_thread);
+    // if (status != PJ_SUCCESS) {
+    //     // 处理错误
+    //     throw(QObject::tr("pj_thread_register failed").toStdString());
+    // }
+
+
+
+    return true;
+}
+
+/** --------------------------------------------------------------------------------------
+ * @name    bool pjsip_Release();
+ * @brief   PJSIP库的释放过程
+ * @param
+ * @return  true:成功 false:失败
+ --------------------------------------------------------------------------------------*/
+bool CNetCapture::pjsip_Release()
+{
+    pj_bool_t thread_registered = PJ_FALSE;
+    pj_thread_desc desc;
+    pj_thread_t* pthread = nullptr;
+
+    // if (&m_scanner)
+    // {
+    //     pj_scan_fini(&m_scanner);
+    // }
+
+    if (m_endpt)
+    {
+        pjsip_endpt_destroy(m_endpt);
+        m_endpt = nullptr;
+    }
+    if (&m_caching_pool)
+        pj_caching_pool_destroy(&m_caching_pool);
+
+
+
+
+    if (!thread_registered && !pj_thread_is_registered())
+    {
+        if (pj_thread_register(NULL, desc, &pthread) == PJ_SUCCESS)
+        {
+            thread_registered = PJ_TRUE;
+        }
+    }
+
+    if (pthread)
+    {
+        if (pj_thread_is_registered())
+            pj_thread_destroy(pthread);
+        pthread = nullptr;
+    }
+    pj_shutdown();
+    return true;
+}

@@ -23,7 +23,7 @@
 #define _CompanyName "CIS"
 static inline std::string g_ProductName = "Codec";
 static inline std::string g_Version = "1.0.1.1";
-static inline std::string g_BuildTime = "2024-09-10 11:03:26";
+static inline std::string g_BuildTime = "2024-09-14 17:30:04";
 static inline std::string g_Description = "Codec库用于处理音视频编码的相关操作。";
 #define PRODUCT_VERSION_MAJOR 1
 #define PRODUCT_VERSION_MINOR 0

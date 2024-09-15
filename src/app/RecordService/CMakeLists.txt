@@ -113,7 +113,7 @@ add_dependencies(${PROJECT_NAME} Core::Common)
 
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::RecordEngine)
+target_link_libraries(${PROJECT_NAME} PUBLIC Core::RecordEngine)
 
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Service)
@@ -251,7 +251,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::RecordEngine)
+target_link_libraries(${PROJECT_NAME} PUBLIC Core::RecordEngine)
 
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindFFMPEG.cmake")
 # target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)

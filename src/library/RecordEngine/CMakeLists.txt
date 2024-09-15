@@ -175,8 +175,8 @@ endif()
 #链接到Pcap库
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindPcap.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE PCAP)
-target_link_libraries(${PROJECT_NAME} PRIVATE PCAP_PACKET)
+target_link_libraries(${PROJECT_NAME} PUBLIC PCAP)
+target_link_libraries(${PROJECT_NAME} PUBLIC PCAP_PACKET)
 
 #链接到Core.Common库
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
@@ -185,7 +185,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 target_link_libraries(${PROJECT_NAME} PRIVATE PJSIP::core)
 
 include(${CMAKE_SOURCE_DIR}/cmake/env/FindNetCapture.cmake)
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::NetCapture)
+target_link_libraries(${PROJECT_NAME} PUBLIC Core::NetCapture)
 
 include(${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake)
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)

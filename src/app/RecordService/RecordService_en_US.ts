@@ -4,12 +4,12 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="src/RecordService.cpp" line="163"/>
+        <location filename="src/RecordService.cpp" line="162"/>
         <source>Start RecordService</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/RecordService.cpp" line="164"/>
+        <location filename="src/RecordService.cpp" line="163"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>

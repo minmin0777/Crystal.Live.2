@@ -25,7 +25,8 @@
 #include <iostream>
 #include "RecordEngine.Export.h"
 #include <functional>
-#include <Record.h>
+ // #include <Record.h>
+extern class CRecord;
 namespace RecordEngine
 {
 

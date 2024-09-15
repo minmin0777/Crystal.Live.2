@@ -28,6 +28,7 @@
 #include "logger.hpp"
 #include "ThreadSafeQueue.h"
 #include "ThreadSafeMap.h"
+#include "ThreadSafeVector.h"
 #include "CommonStructDefine.h"
 #include "Utility.h"
 #include "ExceptionEx.h"

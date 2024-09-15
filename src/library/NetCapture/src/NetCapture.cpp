@@ -72,4 +72,5 @@ namespace NetCapture
         return CNetCapture::Get().SetRecordCallback(callback);
     }
 
+
 } // namespace NetCapture

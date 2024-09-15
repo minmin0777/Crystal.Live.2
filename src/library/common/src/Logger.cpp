@@ -267,8 +267,8 @@ bool Logger::InitBoostlog(const LogInfo& logInfo)
 {
     m_logInfo = logInfo;
     // 添加全局属性"File"和"Line",这些属性可以在日志消息中使用
-    logging::core::get()->add_global_attribute("File", attrs::mutable_constant<std::string>(""));
-    logging::core::get()->add_global_attribute("Line", attrs::mutable_constant<long>(0));
+    // logging::core::get()->add_thread_attribute("File", attrs::mutable_constant<std::string>(""));
+    // logging::core::get()->add_thread_attribute("Line", attrs::mutable_constant<long>(0));
 
     // 创建一个日志文件名,包含了传入的频道名称和时间戳
     std::stringstream strLogFileName, strLogFileNameAll;
@@ -300,7 +300,7 @@ bool Logger::InitBoostlog(const LogInfo& logInfo)
     // );
 
     // 创建一个文件前端,这个前端负责接收日志消息并将其传递给后端
-    typedef sinks::synchronous_sink<sinks::text_file_backend> file_sink;
+    typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
     boost::shared_ptr<file_sink> file_logger(new file_sink(m_pFileBackend));
 
     // typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink_all;

@@ -193,8 +193,8 @@ endif()
 #链接到Pcap库
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindPcap.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE PCAP)
-target_link_libraries(${PROJECT_NAME} PRIVATE PCAP_PACKET)
+target_link_libraries(${PROJECT_NAME} PUBLIC PCAP)
+target_link_libraries(${PROJECT_NAME} PUBLIC PCAP_PACKET)
 
 #链接到Core.Common库
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
@@ -218,6 +218,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE EXOSIP::osip2parser)
 
 #加入RecordEngine库的头文件位置，用于在项目中引用RecordEngine库的头文件Record.h
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src/library/RecordEngine/include)
+
+
 
 #加入RecordEngine库的源文件位置，用于在项目中引用RecordEngine库的源文件Record.cpp
 target_sources(${PROJECT_NAME}

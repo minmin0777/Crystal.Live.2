@@ -91,7 +91,6 @@ void my_terminate_handler() {
 void handler(int sig)
 {
     try {
-        std::cout << boost::stacktrace::stacktrace();
         LOG(FATAL) << boost::stacktrace::stacktrace();
         RecordEngine::StopRecordService();
         exit(sig);

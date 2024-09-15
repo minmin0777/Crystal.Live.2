@@ -29,7 +29,7 @@
 #include <CNetDefine.h>
 #include <Common.h>
 
-
+ // extern struct PCAP_PACKAGE;
  /** --------------------------------------------------------------------------------------
   * 录音分机信息结构类包含了录音所需的分机配置信息
   * 录音分机信息结构类的集合是可伸缩的，随着分机的增加和减少进行动态的创建和销毁。
@@ -77,6 +77,7 @@ public:
     uint16_t    CNG;        //分机舒适噪音
     uint16_t    DTX;        //分机DTMF
     uint16_t    DTMF;       //分机DTMF
+
 
 };
 
@@ -131,4 +132,9 @@ public:
     std::string RecordInfo;     //录音信息
 
     std::string RecordData;     //录音数据
+
+    //pjsip_method sipMethod;     //SIP消息方法
+
 };
+
+

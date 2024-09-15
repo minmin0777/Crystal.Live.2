@@ -23,7 +23,7 @@
 #define _CompanyName "CIS"
 static inline std::string g_ProductName = "Common";
 static inline std::string g_Version = "1.0.1.1";
-static inline std::string g_BuildTime = "2024-09-10 11:03:21";
+static inline std::string g_BuildTime = "2024-09-14 17:30:00";
 static inline std::string g_Description = "Common is a library that provides common functions for the Crystal.Live.2 project.";
 #define PRODUCT_VERSION_MAJOR 1
 #define PRODUCT_VERSION_MINOR 0
