@@ -6,10 +6,10 @@ message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}/third-party/rabbitmq-c/out
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party/rabbitmq-c/out/install/x64-debug/lib/cmake/libSRTP)
+    set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/out/install/x64-debug/lib/cmake/libSRTP)
     message(STATUS "libSRTP-Debug")
 else()
-    set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party/rabbitmq-c/out/install/x64-release/lib/cmake/libSRTP)
+    set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/out/install/x64-release/lib/cmake/libSRTP)
     
 endif()
 
