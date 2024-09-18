@@ -165,6 +165,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     pCurPointer += sizeof(IP_HEADER);
                     pPcapPackage->nContentLen -= sizeof(IP_HEADER);
 
+
                     if (IP_PACKET_TCP == pIPHeader->Protocol)
                     {
                         PTCP_HEADER pTcpHeader = (PTCP_HEADER)pCurPointer;
@@ -465,10 +466,10 @@ void CCaptureThreadWrapper::ParseQueueThread()
                         LOG(INFO) << "RTP Header: " << rtpHeader.ssrc << " -> " << rtpHeader.seq_num;
                     }
 
-                    m_pLastPackage = pPcapPackage; // warning:记录最后一个包,用于下次比较,防止重复包
                     continue;
 
                 }
+                m_pLastPackage = pPcapPackage; // warning:记录最后一个包,用于下次比较,防止重复包
             }
             else
             {

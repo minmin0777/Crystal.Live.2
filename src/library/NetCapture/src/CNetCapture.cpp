@@ -113,10 +113,10 @@ bool CNetCapture::StartCapture() noexcept
     m_vtCaptureThreadWrappers.shrink_to_fit();
     for (size_t i = 0; i < m_devices.size(); i++)
     {
-        if (Config::GetConfigInfo().m_mapNetworkAdapters.find(m_devices[i]->ID) == Config::GetConfigInfo().m_mapNetworkAdapters.end())
-        {
-            continue;
-        }
+        //if (Config::GetConfigInfo().m_mapNetworkAdapters.find(m_devices[i]->ID) == Config::GetConfigInfo().m_mapNetworkAdapters.end())
+        //{
+        //    continue;
+        //}
 
         //创建线程并记录起�?
         auto pCaptureThreadWrapper =
