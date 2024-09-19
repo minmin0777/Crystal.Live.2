@@ -74,7 +74,7 @@ size_t CNetCapture::Release() noexcept
     m_devices.shrink_to_fit();
     pjsip_Release();
 
-
+    LOG(INFO) << "NetCapture Release";
     return true;
 }
 /*! --------------------------------------------------------------------------------------------------------------------------
@@ -934,10 +934,14 @@ bool CNetCapture::pjsip_Release()
     pj_thread_desc desc;
     pj_thread_t* pthread = nullptr;
 
-    // if (&m_scanner)
-    // {
-    //     pj_scan_fini(&m_scanner);
-    // }
+    //注册一个线程用于释放pjsip资源
+    if (!thread_registered && !pj_thread_is_registered())
+    {
+        if (pj_thread_register(NULL, desc, &pthread) == PJ_SUCCESS)
+        {
+            thread_registered = PJ_TRUE;
+        }
+    }
 
     if (m_endpt)
     {
@@ -950,14 +954,6 @@ bool CNetCapture::pjsip_Release()
 
 
 
-    if (!thread_registered && !pj_thread_is_registered())
-    {
-        if (pj_thread_register(NULL, desc, &pthread) == PJ_SUCCESS)
-        {
-            thread_registered = PJ_TRUE;
-        }
-    }
-
     if (pthread)
     {
         if (pj_thread_is_registered())
@@ -965,5 +961,16 @@ bool CNetCapture::pjsip_Release()
         pthread = nullptr;
     }
     pj_shutdown();
+    // if (&m_scanner)
+    // {
+    //     pj_scan_fini(&m_scanner);
+    // }
+
+
+
+
+
+
+
     return true;
 }

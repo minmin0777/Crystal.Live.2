@@ -331,6 +331,7 @@
 			"functionParamAddStr": "",
 			"NoMatchParams": "no show param"
 		},
-		"prettier.useTabs": true
+		"prettier.useTabs": true,
+		"terminal.integrated.defaultProfile.windows": "Command Prompt"
 	}
 }

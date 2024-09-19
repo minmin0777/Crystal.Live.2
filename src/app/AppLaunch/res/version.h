@@ -23,7 +23,7 @@
 #define _CompanyName "CIS"
 static inline std::string g_ProductName = "AppLaunch";
 static inline std::string g_Version = "1.0.2.2";
-static inline std::string g_BuildTime = "2024-09-15 13:23:18";
+static inline std::string g_BuildTime = "2024-09-19 10:32:52";
 static inline std::string g_Description = "AppLaunch is a executeable program  for the Crystal.Live.2 project.";
 #define PRODUCT_VERSION_MAJOR 1
 #define PRODUCT_VERSION_MINOR 0

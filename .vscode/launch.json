@@ -78,8 +78,8 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/out/build/x64-Release/bin",
             "environment": [],
-            "console": "integratedTerminal",
-            "externalConsole": false
+            "console": "externalTerminal",
+            "externalConsole": true
         },
         {
             "name": "(Windows) Debug 调试 AppLaunch",
@@ -159,6 +159,15 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "name": "(Windows) 附加到进程",
+            "type": "cppvsdbg",
+            "request": "attach",
+            "processId": "${command:pickProcess}",
+            "logging": {
+                "engineLogging": false
+            }
         }
     ]
 }
