@@ -78,8 +78,8 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/out/build/x64-Release/bin",
             "environment": [],
-            "console": "externalTerminal",
-            "externalConsole": true
+            "console": "integratedTerminal",
+            "externalConsole": false
         },
         {
             "name": "(Windows) Debug 调试 AppLaunch",

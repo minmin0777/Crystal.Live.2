@@ -10,7 +10,8 @@
 		"filter":"(port 5060 or (port not 445 and port not 8500 and port not 5353 and port not 53 and port not 1900 and port not 5355 and port not 138 and port not 137 and port not 443 and port not 80))  and not ip6  and not ether src ff:ff:ff:ff:ff:ff and not ether dst ff:ff:ff:ff:ff:ff",
 		"device":[
 			
-			{"id":"\\Device\\NPF_{7E092B56-2839-4A6E-965E-FE99AC6908A7}"}
+			{"id":"\\Device\\NPF_{7E092B56-2839-4A6E-965E-FE99AC6908A7}"},
+			{"id":"\\Device\\NPF_{55A10393-5AFF-421E-9111-1DA6B44AA75B}"}
 		]
 		
 	}

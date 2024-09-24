@@ -332,6 +332,7 @@
 			"NoMatchParams": "no show param"
 		},
 		"prettier.useTabs": true,
-		"terminal.integrated.defaultProfile.windows": "Command Prompt"
+		"terminal.integrated.defaultProfile.windows": "Command Prompt",
+		"terminal.integrated.enableImages": true
 	}
 }

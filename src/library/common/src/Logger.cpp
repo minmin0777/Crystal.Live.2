@@ -124,10 +124,10 @@ void file_formatter::operator()(boost::log::record_view const& rec, boost::log::
         else {
             strm << "[Unknown Severity] ";
         }
-
+        auto threadid = boost::log::extract<boost::log::attributes::current_thread_id::value_type>("ThreadID", rec);
         // 输出线程ID,文件名和行号
-        strm << "pid:" << std::dec
-            << boost::log::extract<boost::log::attributes::current_thread_id::value_type>("ThreadID", rec)
+        strm << "pid:" << std::left << std::setw(6) << std::setfill(' ')
+            << threadid->native_id()
             << " | " << file
             << ':' << line << " | ";
 
@@ -267,8 +267,9 @@ bool Logger::InitBoostlog(const LogInfo& logInfo)
 {
     m_logInfo = logInfo;
     // 添加全局属性"File"和"Line",这些属性可以在日志消息中使用
-    // logging::core::get()->add_thread_attribute("File", attrs::mutable_constant<std::string>(""));
-    // logging::core::get()->add_thread_attribute("Line", attrs::mutable_constant<long>(0));
+    logging::core::get()->add_global_attribute("File", attrs::mutable_constant<std::string>(""));
+    logging::core::get()->add_global_attribute("Line", attrs::mutable_constant<long>(0));
+    //logging::core::get()->add_global_attribute("ThreadID", attrs::current_thread_id());
 
     // 创建一个日志文件名,包含了传入的频道名称和时间戳
     std::stringstream strLogFileName, strLogFileNameAll;
@@ -326,6 +327,8 @@ bool Logger::InitBoostlog(const LogInfo& logInfo)
     // 将文件前端的区域设置为"zh_CN.UTF-8",这意味着日志消息将使用这个区域的规则进行格式化
     std::locale loc = boost::locale::generator()("zh_CN.UTF-8");
     file_logger->imbue(loc);
+
+
     // file_logger_all->imbue(loc);
     // 将文件前端添加到日志核心,这意味着日志核心将开始接收并处理通过这个前端发送的日志消息
     logging::core::get()->add_sink(file_logger);
@@ -419,7 +422,6 @@ bool Logger::Load()
         int64_t level = log.at("level").as_int64();
         logging::core::get()->set_filter(expr::attr<severity_level>("Severity") >= (severity_level)level);
         LOG(DEBUG) << "jsonStr:" << jsonStr;
-        LOG(INFO) << "jsonStr:" << jsonStr;
         return true;
     }
     catch (std::exception& ex) {

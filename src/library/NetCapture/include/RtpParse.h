@@ -68,7 +68,7 @@ void parse_rtp_header(const uint8_t* buf, rtp_header* header) {
 
     if (extension) {
         uint16_t extension__len = AV_RB16(&buf[14]);
-        printf("Extension length: %d\n", extension__len);
+        LOG(DEBUG) << "Extension length:" << extension__len << "\n";
         uint16_t ext_id = (((const uint8_t*)(buf + 16))[1]);
 
         //  uint16_t ext_id = AV_RB16(&buf[12]);
@@ -76,20 +76,14 @@ void parse_rtp_header(const uint8_t* buf, rtp_header* header) {
          // int  extension_data=  AV_RB16(&buf[16]);
           //int ext = (AV_RB16(buf + 2) + 1) << 2;
         //  printf("extension_data: %d\n",  extension_data);
-        printf("  Profile: %d\n", ext_id);
-
+        LOG(DEBUG) << "Profile:" << ext_id << "\n";
     }
-    // 输出解析结果
-    printf("RTP header:\n");
-    printf("Version: %u\n", version);
-    printf("Padding: %u\n", padding);
-    printf("Extension: %d\n", extension);
-    printf("CSRC count: %u\n", csrc_count);
-    printf("Marker: %u\n", header->marker);
-    printf("Payload type: %d\n", payload_type);
-    printf("Sequence number: %u\n", header->seq_num);
-    printf("Timestamp: %u\n", header->timestamp);
-    printf("SSRC: %u\n", header->ssrc);
+    if (header->marker == 1)
+    {
+        std::string_view strRtpInfos = std::format("RTP header:\nVersion: {}\nPadding: {}\nExtension: {}\nCSRC count: {}\nMarker: {}\nPayload type: {}\nSequence number: {}\nTimestamp: {}\nSSRC: {}\n", version, padding, extension, csrc_count, header->marker, payload_type, header->seq_num, header->timestamp, header->ssrc);
+        LOG(INFO) << strRtpInfos;
+    }
+
 }
 
 

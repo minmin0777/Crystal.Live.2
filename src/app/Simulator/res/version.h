@@ -23,7 +23,7 @@
 #define _CompanyName "CIS"
 static inline std::string g_ProductName = "Simulator";
 static inline std::string g_Version = "1.0.1.1";
-static inline std::string g_BuildTime = "2024-09-19 10:32:52";
+static inline std::string g_BuildTime = "2024-09-24 15:41:35";
 static inline std::string g_Description = "Simulator模拟器用于模拟SIP消息的发送和接收";
 #define PRODUCT_VERSION_MAJOR 1
 #define PRODUCT_VERSION_MINOR 0

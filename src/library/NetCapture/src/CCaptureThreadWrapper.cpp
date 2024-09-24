@@ -461,10 +461,10 @@ void CCaptureThreadWrapper::ParseQueueThread()
                     // RTP消息
                     rtp_header rtpHeader = { 0 };
                     parse_rtp_header((uint8_t*)pPcapPackage->pContent, &rtpHeader);
-                    if (rtpHeader.marker == 1)
-                    {
-                        LOG(INFO) << "RTP Header: " << rtpHeader.ssrc << " -> " << rtpHeader.seq_num;
-                    }
+                    // if (rtpHeader.marker == 1)
+                    // {
+                    //     LOG(DEBUG) << "RTP Header: " << rtpHeader.ssrc << " -> " << rtpHeader.seq_num;
+                    // }
 
                     continue;
 

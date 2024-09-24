@@ -80,6 +80,17 @@ include(./cmake/env/Findexosip.cmake)
 
 include(./cmake/CreatePDB.cmake)
 
+
+include(FetchContent)
+
+FetchContent_Declare(
+  libhv-1.32
+  GIT_REPOSITORY https://github.com/ithewei/libhv.git
+  GIT_TAG        v1.32  # 或者指定一个特定的标签或提交
+  SOURCE_DIR     "${CMAKE_SOURCE_DIR}/3rd-party/libhv-1.3.2"
+)
+
+
 find_package(Qt6 REQUIRED COMPONENTS  Protobuf )
 
 qt_standard_project_setup()

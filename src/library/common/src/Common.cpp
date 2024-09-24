@@ -31,8 +31,6 @@ namespace Common
 
 
 
-
-
     std::string GetVersion()
     {
 

@@ -157,18 +157,18 @@ public:
 
 std::string path_to_filename(std::string path);
 
-// #define LOG(sev) \
-//    BOOST_LOG_STREAM_WITH_PARAMS( \
-//       (Service_logger::get()), \
-//          (set_get_attrib("File", path_to_filename(__FILE__))) \
-//          (set_get_attrib("Line", (long)__LINE__)) \
-//          (::boost::log::keywords::severity = sev) \
-//    )
 #define LOG(sev) \
    BOOST_LOG_STREAM_WITH_PARAMS( \
       (Service_logger::get()), \
-      (::boost::log::keywords::severity = sev) \
-   )
+         (set_get_attrib("File", path_to_filename(__FILE__))) \
+         (set_get_attrib("Line", (long)__LINE__)) \
+         (::boost::log::keywords::severity = sev) \
+   ) 
+// #define LOG(sev) \
+//    BOOST_LOG_STREAM_WITH_PARAMS( \
+//       (Service_logger::get()), \
+//       (::boost::log::keywords::severity = sev) \
+//    )
 //这里的宏用于进行条件输出
 #define LOG_EVERY_N_VARNAME_CONCAT(base, line) base##line
 #define LOG_EVERY_N_VARNAME(base, line) LOG_EVERY_N_VARNAME_CONCAT(base, line)
@@ -216,6 +216,7 @@ public:
   std::string Version;
   //库文件的位置
   std::string Location;
+  //日志等级
   severity_level LogLevel;
 };
 
@@ -278,8 +279,8 @@ template<typename ValueType>
 ValueType set_get_attrib(const char* name, ValueType value)
 {
   //! 很重要！使用互斥锁保护，避免多线程同时输出日志时出现混乱
-  std::lock_guard<std::shared_mutex> guard(Logger::m_log_mtx);
-  auto attr = boost::log::attribute_cast<boost::log::attributes::mutable_constant<ValueType>>(boost::log::core::get()->get_thread_attributes()[name]);
+  // std::lock_guard<std::shared_mutex> guard(Logger::m_log_mtx);
+  auto attr = boost::log::attribute_cast<boost::log::attributes::mutable_constant<ValueType>>(boost::log::core::get()->get_global_attributes()[name]);
   attr.set(value);
   return attr.get();
 }

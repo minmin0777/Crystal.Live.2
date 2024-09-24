@@ -748,7 +748,7 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
 
                     // 在这里，你可以使用sdp_str，它包含SDP信息的字符串表示
                     // 例如，打印SDP信息
-                    LOG(INFO) << "SDP: " << sdp_str;
+                    LOG(DEBUG) << "SDP: " << sdp_str;
                     // 解析SDP字符串
                     status = pjmedia_sdp_parse(pool, (char*)sdp_str.c_str(), sdp_str.length(), &sdp_session);
                     if (status != PJ_SUCCESS) {
@@ -761,7 +761,7 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                         if (sdp_session->name.ptr) {
                             printf("Session Name: %.*s\n", (int)sdp_session->name.slen, sdp_session->name.ptr);
                         }
-                        LOG(INFO) << "attr count :" << sdp_session->attr_count << " | media count: " << sdp_session->media_count;
+                        LOG(DEBUG) << "sdp_session->attr_count :" << sdp_session->attr_count << " | sdp_session->media_count: " << sdp_session->media_count;
 
                         for (size_t n = 0; n < sdp_session->media_count; n++)
                         {
@@ -771,7 +771,7 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                             if (typeName == "audio")
                             {
                                 unsigned port = media->desc.port; // 获取端口号
-                                LOG(INFO) << "media type: " << typeName << " | media port: " << port;
+                                LOG(DEBUG) << "media type: " << typeName << " | media port: " << port;
                             }
                         }
                     }
