@@ -113,10 +113,10 @@ bool CNetCapture::StartCapture() noexcept
     m_vtCaptureThreadWrappers.shrink_to_fit();
     for (size_t i = 0; i < m_devices.size(); i++)
     {
-        //if (Config::GetConfigInfo().m_mapNetworkAdapters.find(m_devices[i]->ID) == Config::GetConfigInfo().m_mapNetworkAdapters.end())
-        //{
-        //    continue;
-        //}
+        if (Config::GetConfigInfo().m_mapNetworkAdapters.find(m_devices[i]->ID) == Config::GetConfigInfo().m_mapNetworkAdapters.end())
+        {
+            continue;
+        }
 
         //创建线程并记录起�?
         auto pCaptureThreadWrapper =
@@ -324,7 +324,7 @@ size_t CNetCapture::GetDevicesInfo(std::vector<std::shared_ptr<NetworkAdapterInf
     {
         auto pNetAdapterInfo = std::make_shared<NetworkAdapterInfo>();
         pNetAdapterInfo->ID = iDev->name;
-        pNetAdapterInfo->Name = iDev->description;
+        pNetAdapterInfo->Name = boost::locale::conv::to_utf<char>(iDev->description, "GBK");
         //pNetAdapterInfo->Name = GetNetworkAdapterDeviceNameByPcap(iDev->description);
         pNetAdapterInfo->Flags = iDev->flags;
         if (iDev->addresses != nullptr) //有些设备并没有分配IPV4地址,就无需加入可用列表�?
@@ -353,11 +353,12 @@ size_t CNetCapture::GetDevicesInfo(std::vector<std::shared_ptr<NetworkAdapterInf
                     pNetAdapterInfo->MACAddress = GetMacAddress(iDev->name);
 
 
-                    // LOG(INFO) << "IP:" << pNetAdapterInfo->IpAddress
-                    //     << "|" << "网关:" << pNetAdapterInfo->BroadAddress
-                    //     << "|" << "子网掩码:" << pNetAdapterInfo->NetmaskAddress
-                    //     << "|" << "MAC:" << pNetAdapterInfo->MACAddress
-                    //     << "\n";
+                    LOG(DEBUG) << "IP:" << pNetAdapterInfo->IpAddress
+                        << "|" << "网关:" << pNetAdapterInfo->BroadAddress
+                        << "|" << "子网掩码:" << pNetAdapterInfo->NetmaskAddress
+                        << "|" << "MAC:" << pNetAdapterInfo->MACAddress
+                        << "|" << "网卡名称:" << pNetAdapterInfo->Name
+                        << "\n";
                     devices.push_back(pNetAdapterInfo);
                 }
             }
@@ -752,8 +753,12 @@ int CNetCapture::parse_sip_message_from_string(const std::string& sip_message_st
                     // 解析SDP字符串
                     status = pjmedia_sdp_parse(pool, (char*)sdp_str.c_str(), sdp_str.length(), &sdp_session);
                     if (status != PJ_SUCCESS) {
-                        throw(QObject::tr("SDP Parse Error").toStdString());
+                        //throw(QObject::tr("SDP Parse Error").toStdString());
                         // 错误处理
+                        // 处理错误
+                        char errbuf[PJ_ERR_MSG_SIZE] = { 0 };
+                        pj_strerror(status, errbuf, sizeof(errbuf));
+                        LOG(ERROR) << "Error parsing SDP: " << errbuf;
                     }
                     else {
                         // SDP解析成功，可以处理parsed_sdp

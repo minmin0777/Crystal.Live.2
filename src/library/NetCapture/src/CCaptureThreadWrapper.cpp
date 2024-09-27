@@ -97,7 +97,6 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
         ret = pcap_setfilter(pcap, &filter);
 
 
-
         // 检查sip消息正则表达式，用于过滤sip消息
         std::regex sip_regex(R"(^SIP/2\.0 |^INVITE |^ACK |^BYE |^CANCEL |^OPTIONS |^REGISTER |^NOTIFY |^SUBSCRIBE |^REFER |^INFO |^MESSAGE)");
         while (1)
@@ -124,7 +123,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                 if (ret == PCAP_READ_PACKET_RETURN_SUCCESS)
                 {
 
-                    LOG_EVERY(WARN, 10000) << "pcap_next_ex return : " << ret;
+                    LOG_EVERY(WARN, 10000) << QObject::tr("pcap_next_ex Success ret:").toStdString() << ret;
                     std::shared_ptr<PCAP_PACKAGE> pPcapPackage = std::make_shared<PCAP_PACKAGE>();
 
                     pPcapPackage->nContentLen = pPacketHeader->caplen;
@@ -426,27 +425,14 @@ void CCaptureThreadWrapper::ParseQueueThread()
                         << "| Caller: " << pRecord->Caller << " -> Callee: " << pRecord->Callee << "\n"
                         << "| StartTime: " << pRecord->StartTime << "\n"
                         << OUTPUT_LINE;
+
+                    if (CNetCapture::m_RecordCallback == nullptr)
+                    {
+                        LOG(ERROR) << "RecordCallback function is empty";
+                        continue;
+                    }
                     CNetCapture::m_RecordCallback(pRecord);
-                    // if (pRecord->RecordType == "INVITE")
-                    // {
 
-
-                    //     //收到INVITE消息，创建一个新的录音对象
-                    //     if (CNetCapture::m_RecordCallback)
-                    //     {
-                    //         CNetCapture::m_RecordCallback(pRecord);
-                    //     }
-
-                    // }
-
-                    // if (pRecord->RecordType == "BYE")
-                    // {
-                    //     CNetCapture::m_RecordCallback(pRecord);
-                    //     //收到BYE消息，结束录音,删除录音对象
-                    // }
-                    // LOG_EVERY(INFO, 10000) << pRecord->CallID;
-                    //m_pLastPackage = pPcapPackage; // warning:记录最后一个包,用于下次比较,防止重复包
-                    // 
                     if (pRecord->CallID.empty())
                     {
                         LOG(ERROR) << "CallID is empty";
