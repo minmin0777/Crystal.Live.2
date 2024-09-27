@@ -330,15 +330,18 @@ typedef struct _pcap_package
         if (pData)
         {
             delete[] pData;
+            pData = nullptr;
             //LOG(DEBUG) << "delete pData";
         }
-        pData = nullptr;
+
         if (pContent)
         {
-            delete[] pContent;
+            //pContent的内容是存放在pData中的，所以不需要释放pContent
+            pContent = nullptr;
+            //delete[] pContent;
             //LOG(DEBUG) << "delete pContent";
         }
-        pContent = nullptr;
+        // pContent = nullptr;
         nPackageType = ENUM_PACKAGE_TYPE::UNKNOWN;
         nContentLen = 0;
     }
@@ -364,6 +367,95 @@ typedef struct _pcap_package
         // }
 
     }
+    _pcap_package(_pcap_package&& other) noexcept
+    {
+        LOG(INFO) << L"移动构造";
+        if (this != &other) { // 防止自赋值
+            //移动时确保源对象的资源被释放
+            if (pData != nullptr)
+            {
+                delete[] pData;
+                pData = nullptr;
+
+            }
+            //移动时确保源对象的资源被释放
+            if (pContent != nullptr)
+            {
+                //pContent的内容是存放在pData中的，所以不需要释放pContent
+                // delete[] pContent;
+                pContent = nullptr;
+            }
+
+
+            // 将资源从源对象转移到目标对象
+            //pcap_pkthdr 没有移动语义，其为3个整形变量，可以直接赋值
+            header = other.header;
+
+            pData = other.pData;
+            pContent = other.pContent;
+            nContentLen = other.nContentLen;
+            nPackageType = other.nPackageType;
+            //记录IP和端口
+            SrcIP = std::move(other.SrcIP);
+            SrcPort = other.SrcPort;
+            DstIP = std::move(other.DstIP);
+            DstPort = other.DstPort;
+
+            // 将源对象置于有效但未定义的状态
+            other.pData = nullptr;
+            other.pContent = nullptr;
+            other.nContentLen = 0;
+
+        }
+
+    }
+    _pcap_package(const _pcap_package& other) noexcept = default;
+    _pcap_package& operator=(const _pcap_package& other) = default;
+
+
+
+    auto operator=(_pcap_package&& other) noexcept
+    {
+        LOG(INFO) << L"移动赋值";
+        if (this != &other) { // 防止自赋值
+            //移动时确保源对象的资源被释放
+            if (pData != nullptr)
+            {
+                delete[] pData;
+                pData = nullptr;
+
+            }
+            //移动时确保源对象的资源被释放
+            if (pContent != nullptr)
+            {
+                //pContent的内容是存放在pData中的，所以不需要释放pContent
+                // delete[] pContent;
+                pContent = nullptr;
+            }
+
+
+            // 将资源从源对象转移到目标对象
+            //pcap_pkthdr 没有移动语义，其为3个整形变量，可以直接赋值
+            header = other.header;
+
+            pData = other.pData;
+            pContent = other.pContent;
+            nContentLen = other.nContentLen;
+            nPackageType = other.nPackageType;
+
+            //记录IP和端口
+            SrcIP = std::move(other.SrcIP);
+            SrcPort = other.SrcPort;
+            DstIP = std::move(other.DstIP);
+            DstPort = other.DstPort;
+
+            // 将源对象置于有效但未定义的状态
+            other.pData = nullptr;
+            other.pContent = nullptr;
+            other.nContentLen = 0;
+        }
+        return *this;
+    }
 public:
     pcap_pkthdr header = { 0 };
     char* pData = nullptr;
@@ -372,7 +464,15 @@ public:
     //内容存放在pData中，pData的长度为header.len，以太网数据包的长度为header.len-14，因为有14字节的以太网数据包头
     char* pContent = nullptr;
     uint32_t nContentLen = 0;
+
+public:   //记录IP和端口
+    std::string SrcIP;
+    uint16_t SrcPort = 0;
+    std::string DstIP;
+    uint16_t DstPort = 0;
+public:  //包计数器
     static inline std::atomic<uint64_t> nPackageCount = 0;
+
 }PCAP_PACKAGE, * PPCAP_PACKAGE;
 
 

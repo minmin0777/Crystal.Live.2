@@ -74,6 +74,8 @@ if (MSVC)
     target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
 endif()
 
+
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt6::Protobuf
@@ -166,8 +168,8 @@ write_basic_package_version_file(
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
-
+# target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
+target_link_libraries(${PROJECT_NAME} PRIVATE Common)
 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost_lib)

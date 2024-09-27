@@ -32,6 +32,15 @@
 #include <pjlib-util.h>
 #include <pjsua.h>
 #include <pjmedia.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+
+#else
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#endif
  /** --------------------------------------------------------------------------------------------------------------------------
   * @brief 构造函数
   * @param pNetAdapterInfo 网络适配器信息
@@ -132,6 +141,9 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     pPcapPackage->pData = new char[pPacketHeader->caplen];
                     //pcapPackage.pData = (char*)HeapAlloc(g_cRuntimeCommon.GetDefaultHeap(), HEAP_ZERO_MEMORY, pPacketHeader->caplen);
                     memcpy(pPcapPackage->pData, pPacketData, pPacketHeader->caplen);
+                    pPcapPackage->pContent = pPcapPackage->pData;
+
+
                     const char* pCurPointer = (const char*)pPacketData;       // 指针游标，当前处理位置
                     // 先取出Ethernet Header
                     PETHERNET_HEADER pEthernet = (PETHERNET_HEADER)pCurPointer;
@@ -139,7 +151,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     //
 
                     pPcapPackage->nContentLen -= sizeof(ETHERNET_HEADER);
-
+                    pPcapPackage->pContent += sizeof(ETHERNET_HEADER);
                     if (0x8 != pEthernet->EthernetType
                         && 0x800 != pEthernet->EthernetType
                         && 0x81 != pEthernet->EthernetType)
@@ -153,6 +165,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                         // VLAN, 游标需要后移4 Bytes
                         pCurPointer += 4;
                         pPcapPackage->nContentLen -= 4;
+                        pPcapPackage->pContent = pPcapPackage->pData + 4;
                     }
 
                     PIP_HEADER pIPHeader = (PIP_HEADER)pCurPointer;
@@ -163,8 +176,14 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     }
                     pCurPointer += sizeof(IP_HEADER);
                     pPcapPackage->nContentLen -= sizeof(IP_HEADER);
+                    pPcapPackage->pContent += sizeof(IP_HEADER);
 
-
+                    char ipStr[INET_ADDRSTRLEN] = { 0 };
+                    inet_ntop(AF_INET, &pIPHeader->SrcAddr, ipStr, INET_ADDRSTRLEN);
+                    pPcapPackage->SrcIP = ipStr;
+                    memset(ipStr, 0, sizeof(ipStr));
+                    inet_ntop(AF_INET, &pIPHeader->DestAddr, ipStr, INET_ADDRSTRLEN);
+                    pPcapPackage->DstIP = ipStr;
                     if (IP_PACKET_TCP == pIPHeader->Protocol)
                     {
                         PTCP_HEADER pTcpHeader = (PTCP_HEADER)pCurPointer;
@@ -174,6 +193,10 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                         pTcpHeader->DestPort = ntohs(pTcpHeader->DestPort);
                         pCurPointer += sizeof(TCP_HEADER);
                         pPcapPackage->nContentLen -= sizeof(TCP_HEADER);
+                        pPcapPackage->pContent += sizeof(TCP_HEADER);
+                        pPcapPackage->SrcPort = pTcpHeader->SourcePort;
+                        pPcapPackage->DstPort = pTcpHeader->DestPort;
+
                         //LOG(INFO) << "TCP Header: " << pTcpHeader->SourcePort << " -> " << pTcpHeader->DestPort;
 
                     }
@@ -187,25 +210,27 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                         pUDPHeader->DestPort = ntohs(pUDPHeader->DestPort);
                         pCurPointer += sizeof(UDP_HEADER);
                         pPcapPackage->nContentLen -= sizeof(UDP_HEADER);
+                        pPcapPackage->pContent += sizeof(UDP_HEADER);
+                        pPcapPackage->SrcPort = pUDPHeader->SourcePort;
+                        pPcapPackage->DstPort = pUDPHeader->DestPort;
                         //LOG(INFO) << "UDP Header: " << pUDPHeader->SourcePort << " -> " << pUDPHeader->DestPort;
 
                     }
+                    // PCAP_PACKAGE pcapPackage1;
+                    // pcapPackage1 = std::move(*pPcapPackage);
+                    // LOG(INFO) << pPcapPackage.SrcIP << ":" << pcapPackage1.SrcPort << " -> " << pcapPackage1.DstIP << ":" << pcapPackage1.DstPort;
+
+                    // 保存数据包内容(不包含以太网头和IP头)
+                    // pPcapPackage->pContent = new char[pPcapPackage->nContentLen + 1];
 
 
-
-                    //LOG(INFO) << Common::Utility::GetWorkingDirectory();
-
-                    // std::string strSrcMacAddress = Utility::GetMACAddress(pEthernet->SourceHostMac);
-                    // std::string strDstMacAddress = Utility::GetMACAddress(pEthernet->DestHostMac);
-
+                    //memset(pPcapPackage->pContent, NULL, pPcapPackage->nContentLen + 1);
+                    //memcpy(pPcapPackage->pContent, pCurPointer, pPcapPackage->nContentLen);
 
                     // LOG(DEBUG) << "Ethernet Header: " << strSrcMacAddress << " -> " << strDstMacAddress << " Type: " << pEthernet->EthernetType;
                     if (std::regex_search(pCurPointer, sip_regex))
                     {
-                        pPcapPackage->pContent = new char[pPcapPackage->nContentLen + 1];
                         pPcapPackage->nPackageType = PCAP_PACKAGE::ENUM_PACKAGE_TYPE::CONTROL;
-                        memset(pPcapPackage->pContent, NULL, pPcapPackage->nContentLen + 1);
-                        memcpy(pPcapPackage->pContent, pCurPointer, pPcapPackage->nContentLen);
                         // 进一步处理SIP消息...拷贝到消息队列
                         // LOG(HEAD) << "SIP message detected :" << pPcapPackage->nContentLen << "\n" << pPcapPackage->pContent;
                         m_queue.Enqueue(pPcapPackage);
@@ -218,7 +243,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                     else
                     {
                         //rtp_header rtpHeader;
-
+                        pPcapPackage->nPackageType = PCAP_PACKAGE::ENUM_PACKAGE_TYPE::RTP;
                         // RTP消息
                         if (!IsRTPPacket((const char*)pCurPointer, pPcapPackage->nContentLen))
                         {
@@ -229,10 +254,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
                         //parse_rtp_header((uint8_t*)pCurPointer, &rtpHeader);
                         // LOG(HEAD) << "UDP message detected \n" << pCurPointer;
 
-                        pPcapPackage->pContent = new char[pPcapPackage->nContentLen + 1];
-                        pPcapPackage->nPackageType = PCAP_PACKAGE::ENUM_PACKAGE_TYPE::RTP;
-                        memset(pPcapPackage->pContent, NULL, pPcapPackage->nContentLen + 1);
-                        memcpy(pPcapPackage->pContent, pCurPointer, pPcapPackage->nContentLen);
+
 
                         m_queue.Enqueue(pPcapPackage);
 
@@ -263,7 +285,6 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
     {
         nRet = -1;
         LOG(ERROR) << "System Error: " << e.what() << " Error Code: " << e.code() << " Error Message: " << e.code().message();
-
     }
 
     catch (const std::exception& e)
@@ -272,6 +293,7 @@ uint32_t CCaptureThreadWrapper::StartCaptureByPcap(const std::string& strFilter)
         LOG(ERROR) << e.what();
     }
 
+    //finally
     if (pcap)
     {
         pcap_close(pcap);
@@ -424,6 +446,8 @@ void CCaptureThreadWrapper::ParseQueueThread()
                         << "| CallID: " << pRecord->CallID << "\n"
                         << "| Caller: " << pRecord->Caller << " -> Callee: " << pRecord->Callee << "\n"
                         << "| StartTime: " << pRecord->StartTime << "\n"
+                        << "| SRC IP: " << pPcapPackage->SrcIP << ":" << pPcapPackage->SrcPort << " -> DST IP: " << pPcapPackage->DstIP << ":" << pPcapPackage->DstPort << "\n"
+
                         << OUTPUT_LINE;
 
                     if (CNetCapture::m_RecordCallback == nullptr)
@@ -447,6 +471,7 @@ void CCaptureThreadWrapper::ParseQueueThread()
                     // RTP消息
                     rtp_header rtpHeader = { 0 };
                     parse_rtp_header((uint8_t*)pPcapPackage->pContent, &rtpHeader);
+
                     // if (rtpHeader.marker == 1)
                     // {
                     //     LOG(DEBUG) << "RTP Header: " << rtpHeader.ssrc << " -> " << rtpHeader.seq_num;

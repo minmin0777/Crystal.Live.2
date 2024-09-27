@@ -86,8 +86,6 @@ if (MSVC)
 endif()
 
 add_dependencies(${PROJECT_NAME} Script-UpdateTranslations_${PROJECT_NAME})
-add_dependencies(${PROJECT_NAME} Common)
-add_dependencies(${PROJECT_NAME} Config)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
@@ -197,12 +195,14 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_N
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
-include("${CMAKE_SOURCE_DIR}/cmake/env/FindAudio.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake")
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::Audio)
+include("${CMAKE_SOURCE_DIR}/cmake/env/FindAudio.cmake")
+target_link_libraries(${PROJECT_NAME} PRIVATE Audio)
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCodec.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::Codec)
+target_link_libraries(${PROJECT_NAME} PRIVATE Codec)
 
 
 
@@ -215,12 +215,11 @@ include("${CMAKE_SOURCE_DIR}/cmake/env/FindNetCapture.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::NetCapture)
 
 
-include("${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
+
 
 
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::RecordEngine)
+target_link_libraries(${PROJECT_NAME} PRIVATE RecordEngine)
 
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindFFMPEG.cmake")
 # target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)

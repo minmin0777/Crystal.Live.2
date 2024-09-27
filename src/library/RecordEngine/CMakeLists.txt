@@ -182,13 +182,20 @@ target_link_libraries(${PROJECT_NAME} PUBLIC PCAP_PACKET)
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE PJSIP::core)
+include(${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake)
+target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
+
 
 include(${CMAKE_SOURCE_DIR}/cmake/env/FindNetCapture.cmake)
 target_link_libraries(${PROJECT_NAME} PUBLIC Core::NetCapture)
 
-include(${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake)
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
+
+# target_link_libraries(${PROJECT_NAME} PRIVATE PJSIP::core)
+
+
+
+
+
 
 include(${CMAKE_SOURCE_DIR}/cmake/env/FindLibSRTP.cmake)
 target_link_libraries(${PROJECT_NAME} PRIVATE libSRTP::srtp2)

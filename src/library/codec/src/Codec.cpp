@@ -112,7 +112,7 @@ namespace Codec
 
     int CAudioCodec::pcm_to_mp3(const char* pcm_file_path, const char* mp3_file_path)
     {
-        int result;
+        // int result = 0;
         FILE* pcm_file = NULL;
         FILE* mp3_file = NULL;
 

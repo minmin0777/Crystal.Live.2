@@ -6,8 +6,8 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 
 
-set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/out/install/${CMAKE_BUILD_TYPE}/lib/cmake/libhv)
-message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+# set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/out/install/${CMAKE_BUILD_TYPE}/lib/cmake/libhv)
+# message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 find_package(libhv REQUIRED)
 if (libhv_FOUND)
     message(STATUS "libhv-${libhv_VERSION}: ${libhv_FOUND}")

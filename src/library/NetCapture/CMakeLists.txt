@@ -101,6 +101,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_N
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32_LEAN_AND_MEAN)
 endif()
+include(ExternalProject)
+
+
+
+
 
 target_sources(${PROJECT_NAME}
   PRIVATE ${SOURCES} ${HEADERS}
@@ -122,7 +127,9 @@ set_target_properties(${PROJECT_NAME}
     PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
+    # add_custom_target(${PROJECT_NAME}_Compile DEPENDS Config)
 
+    # add_dependencies(${PROJECT_NAME} Config)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -198,7 +205,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC PCAP_PACKET)
 
 #链接到Core.Common库
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
-target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
+target_link_libraries(${PROJECT_NAME} PRIVATE Common)
 
 #链接到Core.Config库
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindConfig.cmake")
@@ -276,12 +283,12 @@ export(EXPORT ${PROJECT_NAME}
 )
 
 export(EXPORT ${PROJECT_NAME}
-       FILE "${CMAKE_BINARY_DIR}/lib/cmake/${PROJECT_NAME}-Config.cmake"
+       FILE "${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/${PROJECT_NAME}-Config.cmake"
        NAMESPACE Core::
 )
 
 install(EXPORT ${PROJECT_NAME}
-        FILE ${PROJECT_NAME}-config.cmake
+        FILE ${PROJECT_NAME}-Targets.cmake
         NAMESPACE Core::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )

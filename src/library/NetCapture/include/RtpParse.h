@@ -80,7 +80,7 @@ void parse_rtp_header(const uint8_t* buf, rtp_header* header) {
     }
     if (header->marker == 1)
     {
-        std::string_view strRtpInfos = std::format("RTP header:\nVersion: {}\nPadding: {}\nExtension: {}\nCSRC count: {}\nMarker: {}\nPayload type: {}\nSequence number: {}\nTimestamp: {}\nSSRC: {}\n", version, padding, extension, csrc_count, header->marker, payload_type, header->seq_num, header->timestamp, header->ssrc);
+        std::string strRtpInfos = std::format("RTP header:\nVersion: {}\nPadding: {}\nExtension: {}\nCSRC count: {}\nMarker: {}\nPayload type: {}\nSequence number: {}\nTimestamp: {}\nSSRC: {}\n", version, padding, extension, csrc_count, header->marker, payload_type, header->seq_num, header->timestamp, header->ssrc);
         LOG(INFO) << strRtpInfos;
     }
 

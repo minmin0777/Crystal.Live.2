@@ -1,12 +1,20 @@
-
 add_subdirectory(./common)
 add_subdirectory(./UI/FluentUI)
-if(NOT ENABLE_COMPILE_THIRD_PARTY_LIBRARY)
-    add_subdirectory(./audio)
+add_subdirectory(./Config)
+add_subdirectory(./audio)
+if(ENABLE_COMPILE_CORE_LIBRARY)
+    add_subdirectory(./codec)   
+    add_subdirectory(./NetCapture)
+endif()
+
+if(NOT ENABLE_COMPILE_THIRD_PARTY_LIBRARY AND NOT ENABLE_COMPILE_CORE_LIBRARY)
     add_subdirectory(./codec)
     add_subdirectory(./NetCapture)
-    add_subdirectory(./Config)
     add_subdirectory(./RecordEngine)
     add_subdirectory(./Data)
+    # add_dependencies(Config Common)
+    # add_dependencies(NetCapture Config Audio Codec)
+    # add_dependencies(RecordEngine NetCapture)
+    
 endif()
 

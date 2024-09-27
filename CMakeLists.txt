@@ -98,12 +98,14 @@ qt_standard_project_setup()
 #添加自定义的CMake选项，用于控制是否编译第三方库，开启时会同时编译第三方库，关闭时只编译项目本身
 option(ENABLE_COMPILE_THIRD_PARTY_LIBRARY "Enable compile third-party Library" OFF)
 
-
+option(ENABLE_COMPILE_CORE_LIBRARY "Enable compile Core Library" OFF)
 
 if(ENABLE_COMPILE_THIRD_PARTY_LIBRARY)
   message(STATUS "开始编译第三方库")
   add_subdirectory(${CMAKE_SOURCE_DIR}/3rd-party)
+  
 endif()
+
 
 add_subdirectory(./src)
 

@@ -83,7 +83,7 @@ endif()
 add_executable(${PROJECT_NAME}  ${SOURCES} ${HEADERS}  ${SRV_SOURCES} res/${PROJECT_NAME}.rc 
 # ${RESOURCES_CPP} 
 )
-add_dependencies(RecordService increment_build_count)
+# add_dependencies(RecordService increment_build_count)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 add_custom_target(${PROJECT_NAME}_Compile DEPENDS Common)
 
@@ -105,15 +105,13 @@ find_program(QT_LRELEASE NAMES lrelease)
 
 
 add_dependencies(${PROJECT_NAME} Script-UpdateTranslations_${PROJECT_NAME})
-add_dependencies(${PROJECT_NAME} Core::Common)
-# add_dependencies(${PROJECT_NAME} Core::Config)
-# add_dependencies(${PROJECT_NAME} Core::NetCapture)
 
 
 
 
-include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
-target_link_libraries(${PROJECT_NAME} PUBLIC Core::RecordEngine)
+
+# include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
+target_link_libraries(${PROJECT_NAME} PUBLIC RecordEngine)
 
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Service)
@@ -228,6 +226,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE LOG_PROJECT_NAME="${PROJECT_N
 include("${CMAKE_SOURCE_DIR}/cmake/env/FindCommon.cmake")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 
+
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindAudio.cmake")
 
 # target_link_libraries(${PROJECT_NAME} PRIVATE Core::Audio)
@@ -250,8 +249,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Core::Common)
 # target_link_libraries(${PROJECT_NAME} PRIVATE Core::Config)
 
 
-include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
-target_link_libraries(${PROJECT_NAME} PUBLIC Core::RecordEngine)
+# include("${CMAKE_SOURCE_DIR}/cmake/env/FindRecordEngine.cmake")
+target_link_libraries(${PROJECT_NAME} PUBLIC RecordEngine)
 
 # include("${CMAKE_SOURCE_DIR}/cmake/env/FindFFMPEG.cmake")
 # target_link_libraries(${PROJECT_NAME} PRIVATE FFMPEG)

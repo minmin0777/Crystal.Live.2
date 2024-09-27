@@ -98,25 +98,9 @@
       }
     },
     {
-      "name": "x64-debug",
-      "displayName": "x64 Debug(App)",
-      "description": "编译主程序及其依赖的库文件,不包括第三方库。(Debug)",
-      "inherits": "windows-base",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "OFF"
-      },
-      "binaryDir": "${sourceDir}/out/build/x64-debug",
-      "installDir": "${sourceDir}/out/install/x64-debug"
-    },
-    {
       "name": "x64-debug(Third-Party)",
       "displayName": "x64 Debug(Third-Party)",
-      "description": "仅编译第三方库。(Debug)",
+      "description": "1.第一步，仅编译第三方库。(Debug) ",
       "inherits": "windows-base",
       "architecture": {
         "value": "x64",
@@ -124,31 +108,81 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "ON"
+        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "ON",
+        "ENABLE_COMPILE_CORE_LIBRARY": "OFF"
       },
       "binaryDir": "${sourceDir}/out/build/x64-debug",
       "installDir": "${sourceDir}/out/install/x64-debug"
     },
     {
-      "name": "x64-release",
-      "displayName": "x64 Release(App)",
-      "description": "编译主程序及其依赖的库文件,不包括第三方库。(RelWithDebInfo)",
+      "name": "x64-debug(Core Library)",
+      "displayName": "x64 Debug(Core Library)",
+      "description": "2.第二步，编译核心库文件,不包括第三方库。(Debug)",
       "inherits": "windows-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "OFF",
+        "ENABLE_COMPILE_CORE_LIBRARY": "ON"
+      },
+      "binaryDir": "${sourceDir}/out/build/x64-debug",
+      "installDir": "${sourceDir}/out/install/x64-debug"
+    },
+    {
+      "name": "x64-debug",
+      "displayName": "x64 Debug(App)",
+      "description": "3.第三步，编译主程序及其依赖的库文件,不包括第三方库。(Debug)",
+      "inherits": "windows-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "OFF",
+        "ENABLE_COMPILE_CORE_LIBRARY": "OFF"
+      },
+      "binaryDir": "${sourceDir}/out/build/x64-debug",
+      "installDir": "${sourceDir}/out/install/x64-debug"
+    },
+    {
+      "name": "x64-release(Third-Party)",
+      "displayName": "x64 Release(Third-Party)",
+      "description": "1.第一步，仅编译第三方库。(RelWithDebInfo)",
+      "inherits": "x64-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "OFF"
+        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "ON",
+        "ENABLE_COMPILE_CORE_LIBRARY": "OFF"
       },
       "binaryDir": "${sourceDir}/out/build/x64-release",
       "installDir": "${sourceDir}/out/install/x64-release"
     },
     {
-      "name": "x64-release(Third-Party)",
-      "displayName": "x64 Release(Third-Party)",
-      "description": "仅编译第三方库。(RelWithDebInfo)",
-      "inherits": "x64-release",
+      "name": "x64-release(Core Library)",
+      "displayName": "x64 Release(Core Library)",
+      "description": "2.第二步，编译核心库文件,不包括第三方库。(RelWithDebInfo)",
+      "inherits": "windows-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "ON"
+        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "OFF",
+        "ENABLE_COMPILE_CORE_LIBRARY": "ON"
+      },
+      "binaryDir": "${sourceDir}/out/build/x64-release",
+      "installDir": "${sourceDir}/out/install/x64-release"
+    },
+    {
+      "name": "x64-release",
+      "displayName": "x64 Release(App)",
+      "description": "3.第三步，编译主程序及其依赖的库文件,不包括第三方库。(RelWithDebInfo)",
+      "inherits": "windows-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ENABLE_COMPILE_THIRD_PARTY_LIBRARY": "OFF",
+        "ENABLE_COMPILE_CORE_LIBRARY": "OFF"
       },
       "binaryDir": "${sourceDir}/out/build/x64-release",
       "installDir": "${sourceDir}/out/install/x64-release"
